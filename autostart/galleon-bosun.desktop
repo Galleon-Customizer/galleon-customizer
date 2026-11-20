@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Galleon Bosun
+Comment=Galleon 100 SD settings, started in the notification area
+Icon=galleon-bosun
+Exec=/usr/local/bin/galleon-bosun --minimized
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5

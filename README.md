@@ -23,6 +23,7 @@ Dials:
 - `bin/galleon-screenrec` — toggle recording via the screen-cast portal + GStreamer (NVENC, x264 fallback).
 - `applications/*.desktop` — launchers the keys start (GalleonCore keys can only start `.desktop` files).
 - `systemd/galleond.service` — user service for `/usr/local/bin/galleond`.
+- `autostart/galleon-bosun.desktop` — starts Bosun at login, hidden in the notification area (`--minimized`; needs the AppIndicator extension on GNOME).
 - `udev/70-galleon.rules` — lets the logged-in user open the keyboard.
 - `patches/0001-dial-turn-steps-pages.patch` — GalleonCore patch: a dial *turn* may be `{"type":"theme"}` (one page per detent).
 

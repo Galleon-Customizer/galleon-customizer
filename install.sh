@@ -15,6 +15,8 @@ P="$HOME/.config/galleoncore/pages.json"
 sed "s#@HOME@#$HOME#g" "$R/config/pages.json" > "$P"
 chmod 600 "$P"   # app keys are disabled if others can write the pages file
 install -m 644 "$R/systemd/galleond.service" "$HOME/.config/systemd/user/"
+mkdir -p "$HOME/.config/autostart"
+install -m 644 "$R/autostart/galleon-bosun.desktop" "$HOME/.config/autostart/"  # Bosun in the tray at login
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 if [ "${1:-}" = "--system" ]; then
   sudo install -m 644 "$R/udev/70-galleon.rules" /etc/udev/rules.d/
