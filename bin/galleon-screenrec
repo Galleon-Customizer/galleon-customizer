@@ -16,7 +16,7 @@ from pathlib import Path
 import gi
 
 gi.require_version("Gst", "1.0")
-from gi.repository import Gio, GLib, Gst  # noqa: E402
+from gi.repository import Gio, GLib, GLibUnix, Gst  # noqa: E402
 
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "galleon-screenrec"
 PIDFILE = STATE / "pid"
@@ -89,13 +89,16 @@ class Portal:
         res = self.call("Start", [session, "", {}], "(osa{sv})")
         if "restore_token" in res:
             TOKEN.write_text(res["restore_token"])
-        node = res["streams"][0][0]
+        self.session = session
+        return session, res["streams"][0][0]
+
+    def open_remote(self):
+        """A PipeWire connection that can see the stream node of the session."""
         reply, fds = self.bus.call_with_unix_fd_list_sync(
             PORTAL, PATH, SCREENCAST, "OpenPipeWireRemote",
-            GLib.Variant("(oa{sv})", (session, {})), GLib.VariantType("(h)"),
+            GLib.Variant("(oa{sv})", (self.session, {})), GLib.VariantType("(h)"),
             Gio.DBusCallFlags.NONE, -1, None, None)
-        fd = fds.get(reply.unpack()[0])
-        return session, node, fd
+        return fds.get(reply.unpack()[0])
 
 
 def build_pipeline(fd, node, out):
@@ -109,7 +112,7 @@ def build_pipeline(fd, node, out):
     aenc = "avenc_aac bitrate=192000" if has("avenc_aac") else "voaacenc bitrate=192000"
     desc = (
         f"pipewiresrc fd={fd} path={node} do-timestamp=true keepalive-time=1000 ! "
-        "videoconvert ! videorate ! video/x-raw,format=NV12,framerate=60/1 ! "
+        "video/x-raw ! videoconvert ! videorate ! video/x-raw,format=NV12,framerate=60/1 ! "
         f"queue max-size-time=2000000000 ! {venc} ! queue ! mux. "
         "pulsesrc device=@DEFAULT_MONITOR@ do-timestamp=true ! audioconvert ! audioresample ! "
         f"queue ! {aenc} ! queue ! mux. "
@@ -123,22 +126,37 @@ def record():
     OUTDIR.mkdir(parents=True, exist_ok=True)
     Gst.init(None)
     loop = GLib.MainLoop()
+    portal = Portal(loop)
     try:
-        _session, node, fd = Portal(loop).open_screen()
+        _session, node = portal.open_screen()
     except Exception as e:  # dialog cancelled or portal error
         notify("Không quay được", str(e), "dialog-error")
         return 1
 
     out = OUTDIR / time.strftime("Quay-%Y-%m-%d_%H-%M-%S.mp4")
-    pipe = build_pipeline(fd, node, out)
+    # The stream node is published a moment after Start: a PipeWire connection
+    # opened too early cannot see it ("target not found"). Wait, and retry.
+    pipe = None
+    for attempt in range(1, 6):
+        time.sleep(0.3 * attempt)
+        pipe = build_pipeline(portal.open_remote(), node, out)
+        pipe.set_state(Gst.State.PLAYING)
+        msg = pipe.get_bus().timed_pop_filtered(2 * Gst.SECOND, Gst.MessageType.ERROR)
+        if msg is None:
+            break
+        pipe.set_state(Gst.State.NULL)
+        out.unlink(missing_ok=True)
+        if attempt == 5:
+            notify("Quay màn hình bị lỗi", msg.parse_error()[0].message, "dialog-error")
+            return 1
     PIDFILE.write_text(str(os.getpid()))
 
     def stop(*_):
         pipe.send_event(Gst.Event.new_eos())
         return GLib.SOURCE_REMOVE
 
-    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, stop)
-    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, stop)
+    GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, stop)
+    GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, stop)
 
     errors = []
 
@@ -153,7 +171,6 @@ def record():
     bus = pipe.get_bus()
     bus.add_signal_watch()
     bus.connect("message", on_msg)
-    pipe.set_state(Gst.State.PLAYING)
     notify("● Đang quay màn hình", "Bấm lại nút để dừng.")
     loop.run()
     pipe.set_state(Gst.State.NULL)
