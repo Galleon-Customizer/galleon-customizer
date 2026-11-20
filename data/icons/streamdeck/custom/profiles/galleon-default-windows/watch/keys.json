@@ -1,0 +1,185 @@
+{
+ "page": "Watch",
+ "keys": [
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.elgato.spotify.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.barraider.twitchtools.channel",
+   "name": "Channel Monitor",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.dahnandpartners.ytticker.sdplugin",
+   "name": "YouTube Ticker",
+   "states": [
+    {
+     "image": "VHL5BA4ISD695897GOOC0RA56OZ.png",
+     "title": "Add \ncreators\nyou follow\n"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.dahnandpartners.ytticker.sdplugin",
+   "name": "YouTube Ticker",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "6CMW4BETE946N8CI06EII9J9SSZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.barraider.twitchtools.channel",
+   "name": "Channel Monitor",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.dahnandpartners.ytticker.sdplugin",
+   "name": "YouTube Ticker",
+   "states": [
+    {
+     "image": "2SDQ1AW5A50KN5Q46OWNCK5954Z.png",
+     "title": "Twitch\nor\nYoutube"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.dahnandpartners.ytticker.sdplugin",
+   "name": "YouTube Ticker",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "M9324E8RBH0SLD1BI0GL3MTW70Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.barraider.twitchtools.channel",
+   "name": "Channel Monitor",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.dahnandpartners.ytticker.sdplugin",
+   "name": "YouTube Ticker",
+   "states": [
+    {
+     "image": "EAFSRLOJNT6CP9HDWBQ418G19CZ.png",
+     "title": "Get \nnotified\nwhen they\nupload!"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.dahnandpartners.ytticker.sdplugin",
+   "name": "YouTube Ticker",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "FMWG9IQTEP427CG5QTD7QKL3C4Z.png",
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

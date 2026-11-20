@@ -1,0 +1,48 @@
+<svg font-family="--apple-system" width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+       <linearGradient id="a" x1="14%" x2="85%" y1="37.5%" y2="62.5%">
+            <stop offset="0%" stop-color="#068DCC"/>
+            <stop offset="100%" stop-color="#0652CC"/>
+        </linearGradient>
+        <filter x="-31%" y="-31%" width="180%" height="180%" filterUnits="objectBoundingBox" id="shadow">
+<feOffset dx="4" dy="4" in="SourceAlpha" result="shadowOffsetOuter1"/>
+<feGaussianBlur stdDeviation="4.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"/>
+<feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0" in="shadowBlurOuter1" result="shadowMatrixOuter1"/>
+<feMerge>
+    <feMergeNode in="shadowMatrixOuter1"/>
+    <feMergeNode in="SourceGraphic"/>
+</feMerge>
+</filter>
+    </defs>
+    <g fill="none" fill-rule="evenodd">
+        <rect fill="url(#a)" fill-rule="nonzero" width="144" height="144" rx="12"/>
+        <g filter="url(#shadow)" font-size="24" font-weight="bold" >
+            <text x="8" y="103" letter-spacing="1" fill="#FFF"></text>
+    <text x="8" y="68" font-size="52" letter-spacing="0" fill="#FFF"></text>
+            <g transform="translate(64,64)">
+                <g fill="none" fill-rule="evenodd"><g id="icon" transform="translate(14 14)"><circle fill="#FFD343" fill-rule="nonzero" cx="21.717" cy="21.717" r="10.508"/><path stroke="#FFD343" stroke-width="4.203" stroke-linecap="round" d="M21.717 5.955V0m0 43.784v-5.955m11.444-27.206 4.211-4.211m-30.96 30.96 4.211-4.211m27.206-11.444h5.955M0 21.717h5.955m27.206 11.337 4.211 4.211M6.412 6.305l4.211 4.21"/></g></g>
+            </g>
+        </g>
+    </g>
+    <g transform="translate(0,1000)">
+        <path fill="url(#a)" d="M0 0h144v144H0z"/>
+        
+        <g fill="none" fill-rule="nonzero">
+            <g filter="url(#shadow)" fill="#FFFFFF" transform="translate(22, 24) scale(0.4)">
+                <path d="M30 60c16.568 0 30-13.431 30-30C60 13.43 46.568 0 30 0 13.431 0 0 13.431 0 30c0 16.569 13.431 30 30 30Zm2.25-48.75a2.25 2.25 0 0 0-4.5 0V30c0 .597.237 1.169.66 1.591l9.75 9.75a2.25 2.25 0 1 0 3.18-3.182l-9.09-9.09V11.25Z"  fill-rule="evenodd"/>
+            </g>
+            <g filter="url(#shadow)" fill="#FFFFFF" transform="translate(24, 62) scale(0.3157894736842105)">
+                <g  fill-rule="evenodd"><path d="M18 0C12.477 0 8 4.477 8 10v29.031C3.176 42.26 0 47.76 0 54c0 9.941 8.059 18 18 18s18-8.059 18-18c0-6.24-3.176-11.74-8-14.969V10c0-5.523-4.477-10-10-10Zm4 20V10a4 4 0 0 0-8 0v10h8Z"/><path d="M45 9a3 3 0 0 0 6 0V3a3 3 0 0 0-6 0v6Zm14.314 7.686a3 3 0 0 1 0-4.243L63.556 8.2a3 3 0 0 1 4.243 4.243l-4.243 4.243a3 3 0 0 1-4.242 0ZM48 40c6.628 0 12-5.372 12-12 0-6.627-5.372-12-12-12s-12 5.373-12 12c0 6.628 5.372 12 12 12Zm19-15a3 3 0 0 0 0 6h6a3 3 0 0 0 0-6h-6ZM48 44a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0v-6a3 3 0 0 1 3-3Zm15.556-4.686a3 3 0 0 0-4.242 4.243l4.242 4.243a3 3 0 0 0 4.243-4.243l-4.243-4.243Z" fill-rule="nonzero"/></g>
+            </g>
+            <g filter="url(#shadow)" fill="#FFFFFF" transform="translate(24, 100) scale(0.3157894736842105)">
+                <g  fill-rule="evenodd"><path d="M8 10C8 4.477 12.477 0 18 0s10 4.477 10 10v29.031C32.824 42.26 36 47.76 36 54c0 9.941-8.059 18-18 18S0 63.941 0 54c0-6.24 3.176-11.74 8-14.969V10Zm6 32.235-2.662 1.782A11.997 11.997 0 0 0 6.166 52h23.668a11.997 11.997 0 0 0-5.172-7.983L22 42.235V10a4 4 0 0 0-8 0v32.235Z"/><path d="M51 12.757V3a3 3 0 0 0-6 0v22h-6a3 3 0 0 0 0 6h6v22a3 3 0 0 0 6 0v-9.757l6.879 6.878a3 3 0 1 0 4.242-4.242L51 34.757V31h3.757L65.88 42.121a3 3 0 1 0 4.242-4.242L63.243 31H73a3 3 0 0 0 0-6h-9.757l6.878-6.879a3 3 0 0 0-4.242-4.242L54.757 25H51v-3.757L62.121 10.12a3 3 0 0 0-4.241-4.24L51 12.757Z" fill-rule="nonzero"/></g>
+            </g>
+           
+            <g fill="#FFF" fill-rule="nonzero" font-size="21" font-weight="bold" text-anchor="end">
+                <text x="120" y="43"></text>
+                <text x="120" y="81"></text>
+                <text x="120" y="119"></text>
+            </g>
+        </g>
+     </g>
+</svg>

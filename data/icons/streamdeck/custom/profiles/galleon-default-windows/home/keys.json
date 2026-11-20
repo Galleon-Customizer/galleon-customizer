@@ -1,0 +1,197 @@
+{
+ "page": "Home",
+ "keys": [
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.weather.weather",
+   "name": "Weather",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.elgato.streamdeck.profile.openchild",
+   "name": "Create Folder",
+   "states": [
+    {
+     "image": "5AW0AWESSL2IPEM0QCVONT11EGZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "B3QB75VA6L0D9EM3K0GLICLB4OZ.png",
+     "title": "Gaming"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "VR9EBVM9B104T5TL6MHLQ8TAP0Z.png",
+     "title": "Numpad"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.vivremotion.systemvitals.plugin",
+   "name": "System Vitals",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.streamdeck.system.website",
+   "name": "Website",
+   "states": [
+    {
+     "image": "87JETO9SNL7O34GG8P8LOB2W3SZ.png",
+     "title": "Meet\n\n\n\nGalleon"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "IE28VE18AL78L2J0PRE0AS70L0Z.png",
+     "title": "Emoji"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "N5JBWNI35T3D745PKK0QVL3BKOZ.png",
+     "title": "Home"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.vivremotion.systemvitals.plugin",
+   "name": "System Vitals",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.elgato.streamdeck.system.website",
+   "name": "Website",
+   "states": [
+    {
+     "image": "FF5QICDLOL2KPDVOE0SV7G1C8OZ.png",
+     "title": "Download\n\n\n\nProfiles"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "3N92PB733100TCBO82KA1TW2AOZ.png",
+     "title": "Watch"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "TSW77IW94D42LAFOEQ6WVMEGG0Z.png",
+     "title": "Control"
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,1",
+   "action": "com.elgato.weather.forecast",
+   "name": "Forecast",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.elgato.spotify.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

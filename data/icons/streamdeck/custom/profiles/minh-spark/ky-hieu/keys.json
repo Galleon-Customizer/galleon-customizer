@@ -1,0 +1,197 @@
+{
+ "page": "Ký hiệu",
+ "keys": [
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "QA1P8MO75T6EF5OSNRHDG6B184Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "KKK17MHDVP47RD5JN3ENN0FQAGZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "S1IHP1I39L2RPDE9VNRGCWVJRCZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "THNCI6SCRT62L92G1I7V9WC3OCZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "OSV747EPF513F1PSNEQO6TV6PKZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "2D2OF0G599637B2KTHN56PRKFCZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "51SSB970GD1JF38PJ7MNF52J14Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "6F7OG4F5QL7NWEDQN1CWPJD9J8Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "A42A3VL0M538H2LHG4KRV77GT8Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "37VCCW71P50QLFRKWT9R56JJ0CZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "W8V70VFL1H1EBAGTN8OGPK7ALCZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.system.hotkey",
+   "name": "Hotkey",
+   "states": [
+    {
+     "image": "03TDO5T81T0K7D691PTN0W9184Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,1",
+   "action": "com.minhspark.aiquota.panel",
+   "name": "AI Quota Panel",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.minhspark.aiquota.panel",
+   "name": "AI Quota Panel",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

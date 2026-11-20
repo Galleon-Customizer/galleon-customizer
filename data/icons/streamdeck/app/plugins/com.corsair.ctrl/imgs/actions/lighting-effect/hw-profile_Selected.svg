@@ -1,0 +1,15 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip_hw_profile)">
+<g transform="translate(24, 27) scale(6)">
+  <rect x="2" y="1" width="12" height="2.5" rx="1.25" fill="white"/>
+  <rect x="2" y="6.75" width="12" height="2.5" rx="1.25" fill="white"/>
+  <rect x="2" y="12.5" width="12" height="2.5" rx="1.25" fill="white"/>
+</g>
+<rect width="144" height="144" rx="24" stroke="white" stroke-width="24"/>
+</g>
+<defs>
+<clipPath id="clip_hw_profile">
+<rect width="144" height="144" fill="white"/>
+</clipPath>
+</defs>
+</svg>

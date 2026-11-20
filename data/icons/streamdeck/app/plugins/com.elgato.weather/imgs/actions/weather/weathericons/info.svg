@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+    <g transform="translate(8,20) rotate(90,24,24)">
+        <path fill="green" fill-rule="nonzero" d="M28.8,4.8 L28.8,26.4 L38.4,26.4 L24,43.2 L9.6,26.4 L19.2,26.4 L19.2,4.8 L28.8,4.8 Z"/>
+    </g>
+     <g transform="translate(8,20) rotate(180,24,24)">
+        <path fill="blue" fill-rule="nonzero" d="M28.8,4.8 L28.8,26.4 L38.4,26.4 L24,43.2 L9.6,26.4 L19.2,26.4 L19.2,4.8 L28.8,4.8 Z"/>
+    </g>
+    <g transform="translate(8,20) rotate(270,24,24)">
+        <path fill="white" fill-rule="nonzero" d="M28.8,4.8 L28.8,26.4 L38.4,26.4 L24,43.2 L9.6,26.4 L19.2,26.4 L19.2,4.8 L28.8,4.8 Z"/>
+    </g>
+    <g fill="#fff" font-family="HelveticaNeue-Bold, Helvetica Neue" font-size="13" font-weight="bold">
+        <text x="64" y="31">Temperature:</text>
+        <text x="64" y="47">Humidity:</text>
+        <text x="64" y="63">Visibility:</text>
+        <text x="64" y="79">Wind:</text>
+        <text x="144" y="31">62%</text>
+        <text x="144" y="47">62%</text>
+        <text x="144" y="63">10km</text>
+        <text x="144" y="79">8.2m/s</text>
+    </g>
+</svg>

@@ -1,0 +1,797 @@
+﻿[
+  {
+    "path": "LogoAdobe-Black.svg",
+    "name": "Adobe logo (Black)",
+    "tags": ["creative", "suite", "design", "software"]
+  },
+  {
+    "path": "LogoAdobeAcrobat-Black.svg",
+    "name": "Adobe Acrobat logo (Black)",
+    "tags": ["pdf", "documents", "editor"]
+  },
+  {
+    "path": "LogoAdobeAfterEffects-Black.svg",
+    "name": "Adobe After Effects logo (Black)",
+    "tags": ["motion", "graphics", "vfx"]
+  },
+  {
+    "path": "LogoAdobeAudition-Black.svg",
+    "name": "Adobe Audition logo (Black)",
+    "tags": ["audio", "editing", "music", "podcast"]
+  },
+  {
+    "path": "LogoAdobeCharacterAnimator-Black.svg",
+    "name": "Adobe Character Animator logo (Black)",
+    "tags": ["animation", "motion", "character"]
+  },
+  {
+    "path": "LogoAdobeCreativeCloud-Black.svg",
+    "name": "Adobe Creative Cloud logo (Black)",
+    "tags": ["adobe", "cloud", "apps"]
+  },
+  {
+    "path": "LogoAdobeExpress-Black.svg",
+    "name": "Adobe Express logo (Black)",
+    "tags": ["design", "templates", "graphics"]
+  },
+  {
+    "path": "LogoAdobeIllustrator-Black.svg",
+    "name": "Adobe Illustrator logo (Black)",
+    "tags": ["vector", "graphics", "illustration"]
+  },
+  {
+    "path": "LogoAdobeIndesign-Black.svg",
+    "name": "Adobe InDesign logo (Black)",
+    "tags": ["layout", "print", "publishing"]
+  },
+  {
+    "path": "LogoAdobeLightroom-Black.svg",
+    "name": "Adobe Lightroom logo (Black)",
+    "tags": ["photo", "editing", "photography"]
+  },
+  {
+    "path": "LogoAdobeMediaEncoder-Black.svg",
+    "name": "Adobe Media Encoder logo (Black)",
+    "tags": ["video", "export", "compression"]
+  },
+  {
+    "path": "LogoAdobePhotoshop-Black.svg",
+    "name": "Adobe Photoshop logo (Black)",
+    "tags": ["photo", "editing", "graphics"]
+  },
+  {
+    "path": "LogoAdobePremierePro-Black.svg",
+    "name": "Adobe Premiere Pro logo (Black)",
+    "tags": ["video", "editing", "timeline"]
+  },
+  {
+    "path": "LogoAirtable-Black.svg",
+    "name": "Airtable logo (Black)",
+    "tags": ["spreadsheet", "database", "productivity"]
+  },
+  {
+    "path": "LogoAmazon-Black.svg",
+    "name": "Amazon logo (Black)",
+    "tags": ["shopping", "ecommerce", "retail"]
+  },
+  {
+    "path": "LogoAmazonAlexa-Black.svg",
+    "name": "Amazon Alexa logo (Black)",
+    "tags": ["voice", "assistant", "iot"]
+  },
+  {
+    "path": "LogoAndroid-Black.svg",
+    "name": "Android logo (Black)",
+    "tags": ["mobile", "os", "google"]
+  },
+  {
+    "path": "LogoAnthropic-Black.svg",
+    "name": "Anthropic logo (Black)",
+    "tags": ["ai", "chatbot", "claude"]
+  },
+  {
+    "path": "LogoApple-Black.svg",
+    "name": "Apple logo (Black)",
+    "tags": ["mac", "iphone", "ios", "hardware"]
+  },
+  {
+    "path": "LogoAppleHome-Black.svg",
+    "name": "Apple Home logo (Black)",
+    "tags": ["smart home", "automation", "apple"]
+  },
+  {
+    "path": "LogoAppleIntelligence-Black.svg",
+    "name": "Apple Intelligence logo (Black)",
+    "tags": ["ai", "assistant", "apple"]
+  },
+  {
+    "path": "LogoAppleMusic-Black.svg",
+    "name": "Apple Music logo (Black)",
+    "tags": ["music", "streaming", "audio"]
+  },
+  {
+    "path": "LogoAsana-Black.svg",
+    "name": "Asana logo (Black)",
+    "tags": ["tasks", "management", "productivity"]
+  },
+  {
+    "path": "LogoAtlassianConfluence-Black.svg",
+    "name": "Atlassian Confluence logo (Black)",
+    "tags": ["docs", "team", "wiki"]
+  },
+  {
+    "path": "LogoAtlassianJira-Black.svg",
+    "name": "Atlassian Jira logo (Black)",
+    "tags": ["issues", "agile", "project"]
+  },
+  {
+    "path": "LogoAudioTechnica-Black.svg",
+    "name": "Audio-Technica logo (Black)",
+    "tags": ["audio", "microphone", "headphones"]
+  },
+  {
+    "path": "LogoBehance-Black.svg",
+    "name": "Behance logo (Black)",
+    "tags": ["portfolio", "creative", "showcase"]
+  },
+  {
+    "path": "LogoBestBuy-Black.svg",
+    "name": "Best Buy logo (Black)",
+    "tags": ["electronics", "retail", "shopping"]
+  },
+  {
+    "path": "LogoBitcoin-Black.svg",
+    "name": "Bitcoin logo (Black)",
+    "tags": ["crypto", "currency", "blockchain"]
+  },
+  {
+    "path": "LogoBlender-Black.svg",
+    "name": "Blender logo (Black)",
+    "tags": ["3d", "modeling", "animation"]
+  },
+  {
+    "path": "LogoBrave-Black.svg",
+    "name": "Brave logo (Black)",
+    "tags": ["browser", "privacy", "web"]
+  },
+  {
+    "path": "LogoCalendly-Black.svg",
+    "name": "Calendly logo (Black)",
+    "tags": ["scheduling", "calendar", "booking"]
+  },
+  {
+    "path": "LogoChrome-Black.svg",
+    "name": "Chrome logo (Black)",
+    "tags": ["browser", "web", "google"]
+  },
+  {
+    "path": "LogoClaude-Black.svg",
+    "name": "Claude logo (Black)",
+    "tags": ["ai", "chatbot", "anthropic"]
+  },
+  {
+    "path": "LogoCorsair-Black.svg",
+    "name": "Corsair logo (Black)",
+    "tags": ["gaming", "hardware", "pc"]
+  },
+  {
+    "path": "LogoCss-Black.svg",
+    "name": "CSS logo (Black)",
+    "tags": ["web", "style", "frontend"]
+  },
+  {
+    "path": "LogoCursor-Black.svg",
+    "name": "Cursor logo (Black)",
+    "tags": ["editor", "code", "ai"]
+  },
+  {
+    "path": "LogoDeepseek-Black.svg",
+    "name": "Deepseek logo (Black)",
+    "tags": ["ai", "search", "chat"]
+  },
+  {
+    "path": "LogoDiscord-Black.svg",
+    "name": "Discord logo (Black)",
+    "tags": ["chat", "voice", "community", "gaming"]
+  },
+  {
+    "path": "LogoDribbble-Black.svg",
+    "name": "Dribbble logo (Black)",
+    "tags": ["design", "portfolio", "community"]
+  },
+  {
+    "path": "LogoDropbox-Black.svg",
+    "name": "Dropbox logo (Black)",
+    "tags": ["storage", "cloud", "files"]
+  },
+  {
+    "path": "LogoEclipse-Black.svg",
+    "name": "Eclipse logo (Black)",
+    "tags": ["ide", "java", "developer"]
+  },
+  {
+    "path": "LogoElgato-Black.svg",
+    "name": "Elgato logo (Black)",
+    "tags": ["streaming", "hardware", "tools"]
+  },
+  {
+    "path": "LogoElgatoCameraHub-Black.svg",
+    "name": "Elgato Camera Hub logo (Black)",
+    "tags": ["camera", "exposure", "settings"]
+  },
+  {
+    "path": "LogoElgatoControlCenter-Black.svg",
+    "name": "Elgato Control Center logo (Black)",
+    "tags": ["lighting", "key light", "control"]
+  },
+  {
+    "path": "LogoElgatoExplorer-Black.svg",
+    "name": "Elgato Explorer logo (Black)",
+    "tags": ["articles", "search", "tips"]
+  },
+  {
+    "path": "LogoElgatoMarketplace-Black.svg",
+    "name": "Elgato Marketplace logo (Black)",
+    "tags": ["store", "stream deck", "plugins"]
+  },
+  {
+    "path": "LogoElgatoStreamDeck-Black.svg",
+    "name": "Elgato Stream Deck logo (Black)",
+    "tags": ["macropad", "shortcuts", "automation"]
+  },
+  {
+    "path": "LogoElgatoStudio-Black.svg",
+    "name": "Elgato Studio logo (Black)",
+    "tags": ["production", "switcher", "live"]
+  },
+  {
+    "path": "LogoElgatoWaveCast-Black.svg",
+    "name": "Elgato Wave Cast logo (Black)",
+    "tags": ["audio", "broadcast", "routing"]
+  },
+  {
+    "path": "LogoElgatoWaveLink-Black.svg",
+    "name": "Elgato Wave Link logo (Black)",
+    "tags": ["audio", "mixer", "routing"]
+  },
+  {
+    "path": "LogoEpicGames-Black.svg",
+    "name": "Epic Games logo (Black)",
+    "tags": ["games", "launcher", "store"]
+  },
+  {
+    "path": "LogoEthereum-Black.svg",
+    "name": "Ethereum logo (Black)",
+    "tags": ["crypto", "blockchain", "web3"]
+  },
+  {
+    "path": "LogoFacebook-Black.svg",
+    "name": "Facebook logo (Black)",
+    "tags": ["social", "meta", "network"]
+  },
+  {
+    "path": "LogoFigma-Black.svg",
+    "name": "Figma logo (Black)",
+    "tags": ["design", "ui", "collaboration"]
+  },
+  {
+    "path": "LogoFirefoxBrowser-Black.svg",
+    "name": "Firefox Browser logo (Black)",
+    "tags": ["browser", "mozilla", "web"]
+  },
+  {
+    "path": "LogoFrameio-Black.svg",
+    "name": "Frameio logo (Black)",
+    "tags": ["video", "review", "teamwork"]
+  },
+  {
+    "path": "LogoFramer-Black.svg",
+    "name": "Framer logo (Black)",
+    "tags": ["web", "design", "animation"]
+  },
+  {
+    "path": "LogoGamerSensei-Black.svg",
+    "name": "Gamer Sensei logo (Black)",
+    "tags": ["coaching", "gaming", "training"]
+  },
+  {
+    "path": "LogoGithub-Black.svg",
+    "name": "GitHub logo (Black)",
+    "tags": ["code", "repository", "version control"]
+  },
+  {
+    "path": "LogoGithubCopilot-Black.svg",
+    "name": "GitHub Copilot logo (Black)",
+    "tags": ["ai", "code", "suggestions"]
+  },
+  {
+    "path": "LogoGitlab-Black.svg",
+    "name": "Gitlab logo (Black)",
+    "tags": ["devops", "repository", "code"]
+  },
+  {
+    "path": "LogoGmail-Black.svg",
+    "name": "Gmail logo (Black)",
+    "tags": ["email", "google", "mail"]
+  },
+  {
+    "path": "LogoGoogle-Black.svg",
+    "name": "Google logo (Black)",
+    "tags": ["search", "cloud", "tech"]
+  },
+  {
+    "path": "LogoGoogleAssistant-Black.svg",
+    "name": "Google Assistant logo (Black)",
+    "tags": ["voice", "ai", "smart"]
+  },
+  {
+    "path": "LogoGoogleCalendar-Black.svg",
+    "name": "Google Calendar logo (Black)",
+    "tags": ["calendar", "schedule", "google"]
+  },
+  {
+    "path": "LogoGoogleChat-Black.svg",
+    "name": "Google Chat logo (Black)",
+    "tags": ["messaging", "team", "google"]
+  },
+  {
+    "path": "LogoGoogleDocs-Black.svg",
+    "name": "Google Docs logo (Black)",
+    "tags": ["documents", "editor", "cloud"]
+  },
+  {
+    "path": "LogoGoogleDrive-Black.svg",
+    "name": "Google Drive logo (Black)",
+    "tags": ["storage", "cloud", "files"]
+  },
+  {
+    "path": "LogoGoogleForms-Black.svg",
+    "name": "Google Forms logo (Black)",
+    "tags": ["forms", "survey", "google"]
+  },
+  {
+    "path": "LogoGoogleGemini-Black.svg",
+    "name": "Google Gemini logo (Black)",
+    "tags": ["ai", "chatbot", "google"]
+  },
+  {
+    "path": "LogoGoogleMaps-Black.svg",
+    "name": "Google Maps logo (Black)",
+    "tags": ["navigation", "maps", "directions"]
+  },
+  {
+    "path": "LogoGoogleMeet-Black.svg",
+    "name": "Google Meet logo (Black)",
+    "tags": ["video", "call", "meetings"]
+  },
+  {
+    "path": "LogoGooglePhotos-Black.svg",
+    "name": "Google Photos logo (Black)",
+    "tags": ["photos", "cloud", "backup"]
+  },
+  {
+    "path": "LogoGoogleSheets-Black.svg",
+    "name": "Google Sheets logo (Black)",
+    "tags": ["spreadsheet", "google", "data"]
+  },
+  {
+    "path": "LogoGoogleSites-Black.svg",
+    "name": "Google Sites logo (Black)",
+    "tags": ["web", "sites", "builder"]
+  },
+  {
+    "path": "LogoGoogleSlides-Black.svg",
+    "name": "Google Slides logo (Black)",
+    "tags": ["presentation", "google", "slides"]
+  },
+  {
+    "path": "LogoGoogleTranslate-Black.svg",
+    "name": "Google Translate logo (Black)",
+    "tags": ["translate", "language", "google"]
+  },
+  {
+    "path": "LogoGrok-Black.svg",
+    "name": "Grok logo (Black)",
+    "tags": ["ai", "chatbot", "x"]
+  },
+  {
+    "path": "LogoHtml-Black.svg",
+    "name": "HTML logo (Black)",
+    "tags": ["web", "markup", "frontend"]
+  },
+  {
+    "path": "LogoInstagram-Black.svg",
+    "name": "Instagram logo (Black)",
+    "tags": ["photos", "stories", "social"]
+  },
+  {
+    "path": "LogoIntel-Black.svg",
+    "name": "Intel logo (Black)",
+    "tags": ["hardware", "processor", "chip"]
+  },
+  {
+    "path": "LogoJs-Black.svg",
+    "name": "JS logo (Black)",
+    "tags": ["javascript", "web", "frontend"]
+  },
+  {
+    "path": "LogoKick-Black.svg",
+    "name": "Kick logo (Black)",
+    "tags": ["streaming", "gaming", "live"]
+  },
+  {
+    "path": "LogoLinear-Black.svg",
+    "name": "Linear logo (Black)",
+    "tags": ["tasks", "productivity", "engineering"]
+  },
+  {
+    "path": "LogoLinkedin-Black.svg",
+    "name": "LinkedIn logo (Black)",
+    "tags": ["career", "network", "professional"]
+  },
+  {
+    "path": "LogoLovable-Black.svg",
+    "name": "Lovable logo (Black)",
+    "tags": ["design", "branding", "studio"]
+  },
+  {
+    "path": "LogoMacos-Black.svg",
+    "name": "macOS logo (Black)",
+    "tags": ["apple", "desktop", "os"]
+  },
+  {
+    "path": "LogoMarkdown-Black.svg",
+    "name": "Markdown logo (Black)",
+    "tags": ["docs", "syntax", "lightweight"]
+  },
+  {
+    "path": "LogoMatter-Black.svg",
+    "name": "Matter logo (Black)",
+    "tags": ["smart home", "iot", "standard"]
+  },
+  {
+    "path": "LogoMedium-Black.svg",
+    "name": "Medium logo (Black)",
+    "tags": ["writing", "blogging", "articles"]
+  },
+  {
+    "path": "LogoMeldStudio-Black.svg",
+    "name": "Meld Studio logo (Black)",
+    "tags": ["design", "branding", "studio"]
+  },
+  {
+    "path": "LogoMeta-Black.svg",
+    "name": "Meta logo (Black)",
+    "tags": ["facebook", "vr", "social"]
+  },
+  {
+    "path": "LogoMicrosoft-Black.svg",
+    "name": "Microsoft logo (Black)",
+    "tags": ["windows", "office", "enterprise"]
+  },
+  {
+    "path": "LogoMicrosoftCopilot-Black.svg",
+    "name": "Microsoft Copilot logo (Black)",
+    "tags": ["ai", "assistant", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftExcel-Black.svg",
+    "name": "Microsoft Excel logo (Black)",
+    "tags": ["spreadsheets", "data", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftForms-Black.svg",
+    "name": "Microsoft Forms logo (Black)",
+    "tags": ["survey", "forms", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftOnedrive-Black.svg",
+    "name": "Microsoft OneDrive logo (Black)",
+    "tags": ["cloud", "files", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftOnenote-Black.svg",
+    "name": "Microsoft OneNote logo (Black)",
+    "tags": ["notes", "organization", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftOutlook-Black.svg",
+    "name": "Microsoft Outlook logo (Black)",
+    "tags": ["email", "calendar", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftPowerpoint-Black.svg",
+    "name": "Microsoft PowerPoint logo (Black)",
+    "tags": ["slides", "presentation", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftProject-Black.svg",
+    "name": "Microsoft Project logo (Black)",
+    "tags": ["project", "management", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftSharepoint-Black.svg",
+    "name": "Microsoft SharePoint logo (Black)",
+    "tags": ["team", "docs", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftTeams-Black.svg",
+    "name": "Microsoft Teams logo (Black)",
+    "tags": ["chat", "video", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftTodo-Black.svg",
+    "name": "Microsoft To Do logo (Black)",
+    "tags": ["tasks", "checklist", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftVisio-Black.svg",
+    "name": "Microsoft Visio logo (Black)",
+    "tags": ["diagrams", "charts", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftWord-Black.svg",
+    "name": "Microsoft Word logo (Black)",
+    "tags": ["documents", "writing", "microsoft"]
+  },
+  {
+    "path": "LogoMiro-Black.svg",
+    "name": "Miro logo (Black)",
+    "tags": ["whiteboard", "collaboration", "planning"]
+  },
+  {
+    "path": "LogoNdi-Black.svg",
+    "name": "Ndi logo (Black)",
+    "tags": ["video", "network", "broadcast"]
+  },
+  {
+    "path": "LogoNintendoSwitch-Black.svg",
+    "name": "Nintendo Switch logo (Black)",
+    "tags": ["console", "games", "nintendo"]
+  },
+  {
+    "path": "LogoNotion-Black.svg",
+    "name": "Notion logo (Black)",
+    "tags": ["notes", "productivity", "wiki"]
+  },
+  {
+    "path": "LogoNvidia-Black.svg",
+    "name": "NVIDIA logo (Black)",
+    "tags": ["gpu", "graphics", "hardware"]
+  },
+  {
+    "path": "LogoObs-Black.svg",
+    "name": "OBS logo (Black)",
+    "tags": ["streaming", "recording", "video"]
+  },
+  {
+    "path": "LogoObsidian-Black.svg",
+    "name": "Obsidian logo (Black)",
+    "tags": ["notes", "markdown", "knowledge"]
+  },
+  {
+    "path": "LogoOpenai-Black.svg",
+    "name": "OpenAI logo (Black)",
+    "tags": ["ai", "chatgpt", "technology"]
+  },
+  {
+    "path": "LogoOrigin-Black.svg",
+    "name": "Origin logo (Black)",
+    "tags": ["pc", "gaming", "build"]
+  },
+  {
+    "path": "LogoPerplexity-Black.svg",
+    "name": "Perplexity logo (Black)",
+    "tags": ["ai", "search", "chat"]
+  },
+  {
+    "path": "LogoPinterest-Black.svg",
+    "name": "Pinterest logo (Black)",
+    "tags": ["ideas", "photos", "board"]
+  },
+  {
+    "path": "LogoPlayStation-Black.svg",
+    "name": "PlayStation logo (Black)",
+    "tags": ["console", "games", "sony"]
+  },
+  {
+    "path": "LogoPython-Black.svg",
+    "name": "Python logo (Black)",
+    "tags": ["code", "programming", "language"]
+  },
+  {
+    "path": "LogoQt-Black.svg",
+    "name": "Qt logo (Black)",
+    "tags": ["framework", "ui", "developer"]
+  },
+  {
+    "path": "LogoRaycast-Black.svg",
+    "name": "Raycast logo (Black)",
+    "tags": ["productivity", "launcher", "mac"]
+  },
+  {
+    "path": "LogoReact-Black.svg",
+    "name": "React logo (Black)",
+    "tags": ["javascript", "framework", "frontend"]
+  },
+  {
+    "path": "LogoReddit-Black.svg",
+    "name": "Reddit logo (Black)",
+    "tags": ["community", "forums", "discussion"]
+  },
+  {
+    "path": "LogoScuf-Black.svg",
+    "name": "SCUF logo (Black)",
+    "tags": ["controllers", "gaming", "hardware"]
+  },
+  {
+    "path": "LogoShopify-Black.svg",
+    "name": "Shopify logo (Black)",
+    "tags": ["ecommerce", "store", "products"]
+  },
+  {
+    "path": "LogoSiri-Black.svg",
+    "name": "Siri logo (Black)",
+    "tags": ["voice", "apple", "assistant"]
+  },
+  {
+    "path": "LogoSketch-Black.svg",
+    "name": "Sketch logo (Black)",
+    "tags": ["design", "vector", "ui"]
+  },
+  {
+    "path": "LogoSkype-Black.svg",
+    "name": "Skype logo (Black)",
+    "tags": ["video", "chat", "microsoft"]
+  },
+  {
+    "path": "LogoSlack-Black.svg",
+    "name": "Slack logo (Black)",
+    "tags": ["team", "chat", "communication"]
+  },
+  {
+    "path": "LogoSnapchat-Black.svg",
+    "name": "Snapchat logo (Black)",
+    "tags": ["photos", "stories", "social"]
+  },
+  {
+    "path": "LogoSpotify-Black.svg",
+    "name": "Spotify logo (Black)",
+    "tags": ["music", "audio", "streaming"]
+  },
+  {
+    "path": "LogoSteam-Black.svg",
+    "name": "Steam logo (Black)",
+    "tags": ["games", "pc", "valve"]
+  },
+  {
+    "path": "LogoSteamDeck-Black.svg",
+    "name": "Steam Deck logo (Black)",
+    "tags": ["handheld", "games", "valve"]
+  },
+  {
+    "path": "LogoStreamelements-Black.svg",
+    "name": "StreamElements logo (Black)",
+    "tags": ["streaming", "widgets", "tools"]
+  },
+  {
+    "path": "LogoStreamlabs-Black.svg",
+    "name": "Streamlabs logo (Black)",
+    "tags": ["streaming", "alerts", "dashboard"]
+  },
+  {
+    "path": "LogoStripe-Black.svg",
+    "name": "Stripe logo (Black)",
+    "tags": ["payments", "finance", "checkout"]
+  },
+  {
+    "path": "LogoTelegram-Black.svg",
+    "name": "Telegram logo (Black)",
+    "tags": ["messaging", "secure", "chat"]
+  },
+  {
+    "path": "LogoThreads-Black.svg",
+    "name": "Threads logo (Black)",
+    "tags": ["social", "meta", "text"]
+  },
+  {
+    "path": "LogoTiktok-Black.svg",
+    "name": "TikTok logo (Black)",
+    "tags": ["video", "shortform", "social"]
+  },
+  {
+    "path": "LogoTumblr-Black.svg",
+    "name": "Tumblr logo (Black)",
+    "tags": ["blog", "social", "microblog"]
+  },
+  {
+    "path": "LogoTwitch-Black.svg",
+    "name": "Twitch logo (Black)",
+    "tags": ["streaming", "live", "gaming"]
+  },
+  {
+    "path": "LogoTwitter-Black.svg",
+    "name": "Twitter logo (Black)",
+    "tags": ["social", "news", "microblog"]
+  },
+  {
+    "path": "LogoV0-Black.svg",
+    "name": "v0 logo (Black)",
+    "tags": ["web", "builder", "ai"]
+  },
+  {
+    "path": "LogoVercel-Black.svg",
+    "name": "Vercel logo (Black)",
+    "tags": ["deployment", "hosting", "frontend"]
+  },
+  {
+    "path": "LogoVisualStudio-Black.svg",
+    "name": "Visual Studio logo (Black)",
+    "tags": ["ide", "microsoft", "code"]
+  },
+  {
+    "path": "LogoVisualStudioCode-Black.svg",
+    "name": "Visual Studio Code logo (Black)",
+    "tags": ["editor", "code", "microsoft"]
+  },
+  {
+    "path": "LogoVoicemod-Black.svg",
+    "name": "Voicemod logo (Black)",
+    "tags": ["audio", "effects", "streaming"]
+  },
+  {
+    "path": "LogoVue-Black.svg",
+    "name": "Vue logo (Black)",
+    "tags": ["framework", "javascript", "frontend"]
+  },
+  {
+    "path": "LogoWebflow-Black.svg",
+    "name": "Webflow logo (Black)",
+    "tags": ["builder", "web", "design"]
+  },
+  {
+    "path": "LogoWebstorm-Black.svg",
+    "name": "WebStorm logo (Black)",
+    "tags": ["ide", "javascript", "development"]
+  },
+  {
+    "path": "LogoWechat-Black.svg",
+    "name": "WeChat logo (Black)",
+    "tags": ["chat", "social", "china"]
+  },
+  {
+    "path": "LogoWindows-Black.svg",
+    "name": "Windows logo (Black)",
+    "tags": ["microsoft", "os", "desktop"]
+  },
+  {
+    "path": "LogoWindsurf-Black.svg",
+    "name": "Windsurf logo (Black)",
+    "tags": ["app", "control", "smart"]
+  },
+  {
+    "path": "LogoX-Black.svg",
+    "name": "X logo (Black)",
+    "tags": ["twitter", "social", "news"]
+  },
+  {
+    "path": "LogoXbox-Black.svg",
+    "name": "Xbox logo (Black)",
+    "tags": ["console", "games", "microsoft"]
+  },
+  {
+    "path": "LogoYoutube-Black.svg",
+    "name": "YouTube logo (Black)",
+    "tags": ["video", "streaming", "creator"]
+  },
+  {
+    "path": "LogoZapier-Black.svg",
+    "name": "Zapier logo (Black)",
+    "tags": ["automation", "workflow", "integration"]
+  },
+  {
+    "path": "LogoZoom-Black.svg",
+    "name": "Zoom logo (Black)",
+    "tags": ["video", "call", "meetings"]
+  }
+]

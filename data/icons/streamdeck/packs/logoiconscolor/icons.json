@@ -1,0 +1,672 @@
+[
+  {
+    "path": "LogoAdobe-Color.svg",
+    "name": "Adobe logo (Color)",
+    "tags": ["creative", "suite", "design", "software"]
+  },
+  {
+    "path": "LogoAdobeAcrobat-Color.svg",
+    "name": "Adobe Acrobat logo (Color)",
+    "tags": ["pdf", "documents", "editor"]
+  },
+  {
+    "path": "LogoAdobeAfterEffects-Color.svg",
+    "name": "Adobe After Effects logo (Color)",
+    "tags": ["motion", "graphics", "vfx"]
+  },
+  {
+    "path": "LogoAdobeAudition-Color.svg",
+    "name": "Adobe Audition logo (Color)",
+    "tags": ["audio", "editing", "music", "podcast"]
+  },
+  {
+    "path": "LogoAdobeCharacterAnimator-Color.svg",
+    "name": "Adobe Character Animator logo (Color)",
+    "tags": ["animation", "motion", "character"]
+  },
+  {
+    "path": "LogoAdobeCreativeCloud-Color.png",
+    "name": "Adobe Creative Cloud logo (Color)",
+    "tags": ["adobe", "cloud", "apps"]
+  },
+  {
+    "path": "LogoAdobeExpress-Color.png",
+    "name": "Adobe Express logo (Color)",
+    "tags": ["design", "templates", "graphics"]
+  },
+  {
+    "path": "LogoAdobeIllustrator-Color.svg",
+    "name": "Adobe Illustrator logo (Color)",
+    "tags": ["vector", "graphics", "illustration"]
+  },
+  {
+    "path": "LogoAdobeIndesign-Color.svg",
+    "name": "Adobe InDesign logo (Color)",
+    "tags": ["layout", "print", "publishing"]
+  },
+  {
+    "path": "LogoAdobeLightroom-Color.svg",
+    "name": "Adobe Lightroom logo (Color)",
+    "tags": ["photo", "editing", "photography"]
+  },
+  {
+    "path": "LogoAdobeMediaEncoder-Color.svg",
+    "name": "Adobe Media Encoder logo (Color)",
+    "tags": ["video", "export", "compression"]
+  },
+  {
+    "path": "LogoAdobePhotoshop-Color.svg",
+    "name": "Adobe Photoshop logo (Color)",
+    "tags": ["photo", "editing", "graphics"]
+  },
+  {
+    "path": "LogoAdobePremierePro-Color.svg",
+    "name": "Adobe Premiere Pro logo (Color)",
+    "tags": ["video", "editing", "timeline"]
+  },
+  {
+    "path": "LogoAirtable-Color.svg",
+    "name": "Airtable logo (Color)",
+    "tags": ["spreadsheet", "database", "productivity"]
+  },
+  {
+    "path": "LogoAmazon-Black-Color.svg",
+    "name": "Amazon logo (Black, Color)",
+    "tags": ["shopping", "ecommerce", "retail"]
+  },
+  {
+    "path": "LogoAmazon-White-Color.svg",
+    "name": "Amazon logo (White, Color)",
+    "tags": ["shopping", "ecommerce", "retail"]
+  },
+  {
+    "path": "LogoAmazonAlexa-Color.svg",
+    "name": "Amazon Alexa logo (Color)",
+    "tags": ["voice", "assistant", "iot"]
+  },
+  {
+    "path": "LogoAndroid-Color.png",
+    "name": "Android logo (Color)",
+    "tags": ["mobile", "os", "google"]
+  },
+  {
+    "path": "LogoAppleIntelligence-Color.svg",
+    "name": "Apple Intelligence logo (Color)",
+    "tags": ["ai", "assistant", "apple"]
+  },
+  {
+    "path": "LogoAppleMusic-Color.svg",
+    "name": "Apple Music logo (Color)",
+    "tags": ["music", "streaming", "audio"]
+  },
+  {
+    "path": "LogoAsana-Color.svg",
+    "name": "Asana logo (Color)",
+    "tags": ["tasks", "management", "productivity"]
+  },
+  {
+    "path": "LogoAtlassianConfluence-Color.svg",
+    "name": "Atlassian Confluence logo (Color)",
+    "tags": ["docs", "team", "wiki"]
+  },
+  {
+    "path": "LogoAtlassianJira-Color.svg",
+    "name": "Atlassian Jira logo (Color)",
+    "tags": ["issues", "agile", "project"]
+  },
+  {
+    "path": "LogoBestBuy-Color.svg",
+    "name": "Best Buy logo (Color)",
+    "tags": ["electronics", "retail", "shopping"]
+  },
+  {
+    "path": "LogoBitcoin-Color.svg",
+    "name": "Bitcoin logo (Color)",
+    "tags": ["crypto", "currency", "blockchain"]
+  },
+  {
+    "path": "LogoBlender-Color.svg",
+    "name": "Blender logo (Color)",
+    "tags": ["3d", "modeling", "animation"]
+  },
+  {
+    "path": "LogoBrave-Color.svg",
+    "name": "Brave logo (Color)",
+    "tags": ["browser", "privacy", "web"]
+  },
+  {
+    "path": "LogoCalendly-Color.svg",
+    "name": "Calendly logo (Color)",
+    "tags": ["scheduling", "calendar", "booking"]
+  },
+  {
+    "path": "LogoChrome-Color.svg",
+    "name": "Chrome logo (Color)",
+    "tags": ["browser", "web", "google"]
+  },
+  {
+    "path": "LogoClaude-Color.svg",
+    "name": "Claude logo (Color)",
+    "tags": ["ai", "chatbot", "anthropic"]
+  },
+  {
+    "path": "LogoCss-Color.svg",
+    "name": "CSS logo (Color)",
+    "tags": ["web", "style", "frontend"]
+  },
+  {
+    "path": "LogoDeepseek-Color.svg",
+    "name": "Deepseek logo (Color)",
+    "tags": ["ai", "search", "chat"]
+  },
+  {
+    "path": "LogoDiscord-Color.svg",
+    "name": "Discord logo (Color)",
+    "tags": ["chat", "voice", "community", "gaming"]
+  },
+  {
+    "path": "LogoDribbble-Color.svg",
+    "name": "Dribbble logo (Color)",
+    "tags": ["design", "portfolio", "community"]
+  },
+  {
+    "path": "LogoDropbox-Color.svg",
+    "name": "Dropbox logo (Color)",
+    "tags": ["storage", "cloud", "files"]
+  },
+  {
+    "path": "LogoEclipse-Color.svg",
+    "name": "Eclipse logo (Color)",
+    "tags": ["ide", "java", "developer"]
+  },
+  {
+    "path": "LogoElgatoCameraHub-Color.svg",
+    "name": "Elgato Camera Hub logo (Color)",
+    "tags": ["camera", "exposure", "settings"]
+  },
+  {
+    "path": "LogoElgatoControlCenter-Color.svg",
+    "name": "Elgato Control Center logo (Color)",
+    "tags": ["lighting", "key light", "control"]
+  },
+  {
+    "path": "LogoElgatoMarketplace-Black-Color.svg",
+    "name": "Elgato Marketplace logo (Black, Color)",
+    "tags": ["store", "stream deck", "plugins"]
+  },
+  {
+    "path": "LogoElgatoMarketplace-White-Color.svg",
+    "name": "Elgato Marketplace logo (White, Color)",
+    "tags": ["store", "stream deck", "plugins"]
+  },
+  {
+    "path": "LogoElgatoStreamDeck-Color.svg",
+    "name": "Elgato Stream Deck logo (Color)",
+    "tags": ["macropad", "shortcuts", "automation"]
+  },
+  {
+    "path": "LogoElgatoStudio-Color.svg",
+    "name": "Elgato Studio logo (Color)",
+    "tags": ["production", "switcher", "live"]
+  },
+  {
+    "path": "LogoElgatoWaveCast-Color.svg",
+    "name": "Elgato Wave Cast logo (Color)",
+    "tags": ["audio", "broadcast", "routing"]
+  },
+  {
+    "path": "LogoElgatoWaveLink-Color.svg",
+    "name": "Elgato Wave Link logo (Color)",
+    "tags": ["audio", "mixer", "routing"]
+  },
+  {
+    "path": "LogoEthereum-Color.svg",
+    "name": "Ethereum logo (Color)",
+    "tags": ["crypto", "blockchain", "web3"]
+  },
+  {
+    "path": "LogoFacebook-Color.svg",
+    "name": "Facebook logo (Color)",
+    "tags": ["social", "meta", "network"]
+  },
+  {
+    "path": "LogoFigma-Color.svg",
+    "name": "Figma logo (Color)",
+    "tags": ["design", "ui", "collaboration"]
+  },
+  {
+    "path": "LogoFirefoxBrowser-Color.svg",
+    "name": "Firefox Browser logo (Color)",
+    "tags": ["browser", "mozilla", "web"]
+  },
+  {
+    "path": "LogoFrameio-Color.svg",
+    "name": "Frameio logo (Color)",
+    "tags": ["video", "review", "teamwork"]
+  },
+  {
+    "path": "LogoGamerSensei-Color.svg",
+    "name": "Gamer Sensei logo (Color)",
+    "tags": ["coaching", "gaming", "training"]
+  },
+  {
+    "path": "LogoGitlab-Color.svg",
+    "name": "Gitlab logo (Color)",
+    "tags": ["devops", "repository", "code"]
+  },
+  {
+    "path": "LogoGmail-Color.svg",
+    "name": "Gmail logo (Color)",
+    "tags": ["email", "google", "mail"]
+  },
+  {
+    "path": "LogoGoogle-Color.png",
+    "name": "Google logo (Color)",
+    "tags": ["search", "cloud", "tech"]
+  },
+  {
+    "path": "LogoGoogleAssistant-Color.svg",
+    "name": "Google Assistant logo (Color)",
+    "tags": ["voice", "ai", "smart"]
+  },
+  {
+    "path": "LogoGoogleCalendar-Color.svg",
+    "name": "Google Calendar logo (Color)",
+    "tags": ["calendar", "schedule", "google"]
+  },
+  {
+    "path": "LogoGoogleChat-Color.svg",
+    "name": "Google Chat logo (Color)",
+    "tags": ["messaging", "team", "google"]
+  },
+  {
+    "path": "LogoGoogleDocs-Color.svg",
+    "name": "Google Docs logo (Color)",
+    "tags": ["documents", "editor", "cloud"]
+  },
+  {
+    "path": "LogoGoogleDrive-Color.svg",
+    "name": "Google Drive logo (Color)",
+    "tags": ["storage", "cloud", "files"]
+  },
+  {
+    "path": "LogoGoogleForms-Color.svg",
+    "name": "Google Forms logo (Color)",
+    "tags": ["forms", "survey", "google"]
+  },
+  {
+    "path": "LogoGoogleGemini-Color.png",
+    "name": "Google Gemini logo (Color)",
+    "tags": ["ai", "chatbot", "google"]
+  },
+  {
+    "path": "LogoGoogleMaps-Color.svg",
+    "name": "Google Maps logo (Color)",
+    "tags": ["navigation", "maps", "directions"]
+  },
+  {
+    "path": "LogoGoogleMeet-Color.svg",
+    "name": "Google Meet logo (Color)",
+    "tags": ["video", "call", "meetings"]
+  },
+  {
+    "path": "LogoGooglePhotos-Color.svg",
+    "name": "Google Photos logo (Color)",
+    "tags": ["photos", "cloud", "backup"]
+  },
+  {
+    "path": "LogoGoogleSheets-Color.svg",
+    "name": "Google Sheets logo (Color)",
+    "tags": ["spreadsheet", "google", "data"]
+  },
+  {
+    "path": "LogoGoogleSites-Color.svg",
+    "name": "Google Sites logo (Color)",
+    "tags": ["web", "sites", "builder"]
+  },
+  {
+    "path": "LogoGoogleSlides-Color.svg",
+    "name": "Google Slides logo (Color)",
+    "tags": ["presentation", "google", "slides"]
+  },
+  {
+    "path": "LogoGoogleTranslate-Color.svg",
+    "name": "Google Translate logo (Color)",
+    "tags": ["translate", "language", "google"]
+  },
+  {
+    "path": "LogoHtml-Color.svg",
+    "name": "HTML logo (Color)",
+    "tags": ["web", "markup", "frontend"]
+  },
+  {
+    "path": "LogoInstagram-Color.png",
+    "name": "Instagram logo (Color)",
+    "tags": ["photos", "stories", "social"]
+  },
+  {
+    "path": "LogoIntel-Color.svg",
+    "name": "Intel logo (Color)",
+    "tags": ["hardware", "processor", "chip"]
+  },
+  {
+    "path": "LogoJs-Color.svg",
+    "name": "JS logo (Color)",
+    "tags": ["javascript", "web", "frontend"]
+  },
+  {
+    "path": "LogoKick-Color.svg",
+    "name": "Kick logo (Color)",
+    "tags": ["streaming", "gaming", "live"]
+  },
+  {
+    "path": "LogoLinear-Color.svg",
+    "name": "Linear logo (Color)",
+    "tags": ["tasks", "productivity", "engineering"]
+  },
+  {
+    "path": "LogoLinkedin-Color.svg",
+    "name": "LinkedIn logo (Color)",
+    "tags": ["career", "network", "professional"]
+  },
+  {
+    "path": "LogoLovable-Color.png",
+    "name": "Lovable logo (Color)",
+    "tags": ["design", "branding", "studio"]
+  },
+  {
+    "path": "LogoMeta-Color.svg",
+    "name": "Meta logo (Color)",
+    "tags": ["facebook", "vr", "social"]
+  },
+  {
+    "path": "LogoMicrosoft-Color.svg",
+    "name": "Microsoft logo (Color)",
+    "tags": ["windows", "office", "enterprise"]
+  },
+  {
+    "path": "LogoMicrosoftCopilot-Color.svg",
+    "name": "Microsoft Copilot logo (Color)",
+    "tags": ["ai", "assistant", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftExcel-Color.svg",
+    "name": "Microsoft Excel logo (Color)",
+    "tags": ["spreadsheets", "data", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftForms-Color.svg",
+    "name": "Microsoft Forms logo (Color)",
+    "tags": ["survey", "forms", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftOnedrive-Color.svg",
+    "name": "Microsoft OneDrive logo (Color)",
+    "tags": ["cloud", "files", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftOnenote-Color.svg",
+    "name": "Microsoft OneNote logo (Color)",
+    "tags": ["notes", "organization", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftOutlook-Color.svg",
+    "name": "Microsoft Outlook logo (Color)",
+    "tags": ["email", "calendar", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftPowerpoint-Color.svg",
+    "name": "Microsoft PowerPoint logo (Color)",
+    "tags": ["slides", "presentation", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftProject-Color.svg",
+    "name": "Microsoft Project logo (Color)",
+    "tags": ["project", "management", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftSharepoint-Color.svg",
+    "name": "Microsoft SharePoint logo (Color)",
+    "tags": ["team", "docs", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftTeams-Color.svg",
+    "name": "Microsoft Teams logo (Color)",
+    "tags": ["chat", "video", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftTodo-Color.svg",
+    "name": "Microsoft To Do logo (Color)",
+    "tags": ["tasks", "checklist", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftVisio-Color.svg",
+    "name": "Microsoft Visio logo (Color)",
+    "tags": ["diagrams", "charts", "microsoft"]
+  },
+  {
+    "path": "LogoMicrosoftWord-Color.svg",
+    "name": "Microsoft Word logo (Color)",
+    "tags": ["documents", "writing", "microsoft"]
+  },
+  {
+    "path": "LogoMiro-Color.svg",
+    "name": "Miro logo (Color)",
+    "tags": ["whiteboard", "collaboration", "planning"]
+  },
+  {
+    "path": "LogoNintendoSwitch-Color.svg",
+    "name": "Nintendo Switch logo (Color)",
+    "tags": ["console", "games", "nintendo"]
+  },
+  {
+    "path": "LogoNotion-Color.svg",
+    "name": "Notion logo (Color)",
+    "tags": ["notes", "productivity", "wiki"]
+  },
+  {
+    "path": "LogoNvidia-Color.svg",
+    "name": "NVIDIA logo (Color)",
+    "tags": ["gpu", "graphics", "hardware"]
+  },
+  {
+    "path": "LogoObs-Color.png",
+    "name": "OBS logo (Color)",
+    "tags": ["streaming", "recording", "video"]
+  },
+  {
+    "path": "LogoObsidian-Color.png",
+    "name": "Obsidian logo (Color)",
+    "tags": ["notes", "markdown", "knowledge"]
+  },
+  {
+    "path": "LogoOrigin-Color.svg",
+    "name": "Origin logo (Color)",
+    "tags": ["pc", "gaming", "build"]
+  },
+  {
+    "path": "LogoPerplexity-Color.svg",
+    "name": "Perplexity logo (Color)",
+    "tags": ["ai", "search", "chat"]
+  },
+  {
+    "path": "LogoPinterest-Color.svg",
+    "name": "Pinterest logo (Color)",
+    "tags": ["ideas", "photos", "board"]
+  },
+  {
+    "path": "LogoPlayStation-Color.svg",
+    "name": "PlayStation logo (Color)",
+    "tags": ["console", "games", "sony"]
+  },
+  {
+    "path": "LogoPython-Color.svg",
+    "name": "Python logo (Color)",
+    "tags": ["code", "programming", "language"]
+  },
+  {
+    "path": "LogoQt-Color.svg",
+    "name": "Qt logo (Color)",
+    "tags": ["framework", "ui", "developer"]
+  },
+  {
+    "path": "LogoRaycast-Color.svg",
+    "name": "Raycast logo (Color)",
+    "tags": ["productivity", "launcher", "mac"]
+  },
+  {
+    "path": "LogoReact-Color.svg",
+    "name": "React logo (Color)",
+    "tags": ["javascript", "framework", "frontend"]
+  },
+  {
+    "path": "LogoReddit-Color.svg",
+    "name": "Reddit logo (Color)",
+    "tags": ["community", "forums", "discussion"]
+  },
+  {
+    "path": "LogoScuf-Color.svg",
+    "name": "SCUF logo (Color)",
+    "tags": ["controllers", "gaming", "hardware"]
+  },
+  {
+    "path": "LogoShopify-Color.svg",
+    "name": "Shopify logo (Color)",
+    "tags": ["ecommerce", "store", "products"]
+  },
+  {
+    "path": "LogoSketch-Color.svg",
+    "name": "Sketch logo (Color)",
+    "tags": ["design", "vector", "ui"]
+  },
+  {
+    "path": "LogoSkype-Color.svg",
+    "name": "Skype logo (Color)",
+    "tags": ["video", "chat", "microsoft"]
+  },
+  {
+    "path": "LogoSlack-Color.svg",
+    "name": "Slack logo (Color)",
+    "tags": ["team", "chat", "communication"]
+  },
+  {
+    "path": "LogoSnapchat-Color.svg",
+    "name": "Snapchat logo (Color)",
+    "tags": ["photos", "stories", "social"]
+  },
+  {
+    "path": "LogoSpotify-Color.svg",
+    "name": "Spotify logo (Color)",
+    "tags": ["music", "audio", "streaming"]
+  },
+  {
+    "path": "LogoSteam-Color.svg",
+    "name": "Steam logo (Color)",
+    "tags": ["games", "pc", "valve"]
+  },
+  {
+    "path": "LogoSteamDeck-Black-Color.svg",
+    "name": "Steam Deck logo (Black, Color)",
+    "tags": ["handheld", "games", "valve"]
+  },
+  {
+    "path": "LogoSteamDeck-White-Color.svg",
+    "name": "Steam Deck logo (White, Color)",
+    "tags": ["handheld", "games", "valve"]
+  },
+  {
+    "path": "LogoStreamelements-Color.svg",
+    "name": "StreamElements logo (Color)",
+    "tags": ["streaming", "widgets", "tools"]
+  },
+  {
+    "path": "LogoStreamlabs-Color.svg",
+    "name": "Streamlabs logo (Color)",
+    "tags": ["streaming", "alerts", "dashboard"]
+  },
+  {
+    "path": "LogoStripe-Color.svg",
+    "name": "Stripe logo (Color)",
+    "tags": ["payments", "finance", "checkout"]
+  },
+  {
+    "path": "LogoTelegram-Color.svg",
+    "name": "Telegram logo (Color)",
+    "tags": ["messaging", "secure", "chat"]
+  },
+  {
+    "path": "LogoTiktok-Black-Color.svg",
+    "name": "TikTok logo (Black, Color)",
+    "tags": ["video", "shortform", "social"]
+  },
+  {
+    "path": "LogoTiktok-White-Color.svg",
+    "name": "TikTok logo (White, Color)",
+    "tags": ["video", "shortform", "social"]
+  },
+  {
+    "path": "LogoTwitch-Color.svg",
+    "name": "Twitch logo (Color)",
+    "tags": ["streaming", "live", "gaming"]
+  },
+  {
+    "path": "LogoTwitter-Color.svg",
+    "name": "Twitter logo (Color)",
+    "tags": ["social", "news", "microblog"]
+  },
+  {
+    "path": "LogoVisualStudio-Color.svg",
+    "name": "Visual Studio logo (Color)",
+    "tags": ["ide", "microsoft", "code"]
+  },
+  {
+    "path": "LogoVisualStudioCode-Color.svg",
+    "name": "Visual Studio Code logo (Color)",
+    "tags": ["editor", "code", "microsoft"]
+  },
+  {
+    "path": "LogoVoicemod-Color.svg",
+    "name": "Voicemod logo (Color)",
+    "tags": ["audio", "effects", "streaming"]
+  },
+  {
+    "path": "LogoVue-Color.svg",
+    "name": "Vue logo (Color)",
+    "tags": ["framework", "javascript", "frontend"]
+  },
+  {
+    "path": "LogoWebflow-Color.svg",
+    "name": "Webflow logo (Color)",
+    "tags": ["builder", "web", "design"]
+  },
+  {
+    "path": "LogoWebstorm-Color.svg",
+    "name": "WebStorm logo (Color)",
+    "tags": ["ide", "javascript", "development"]
+  },
+  {
+    "path": "LogoWindows-Color.svg",
+    "name": "Windows logo (Color)",
+    "tags": ["microsoft", "os", "desktop"]
+  },
+  {
+    "path": "LogoWindsurf-Color.svg",
+    "name": "Windsurf logo (Color)",
+    "tags": ["app", "control", "smart"]
+  },
+  {
+    "path": "LogoXbox-Color.svg",
+    "name": "Xbox logo (Color)",
+    "tags": ["console", "games", "microsoft"]
+  },
+  {
+    "path": "LogoYoutube-Color.svg",
+    "name": "YouTube logo (Color)",
+    "tags": ["video", "streaming", "creator"]
+  },
+  {
+    "path": "LogoZoom-Color.svg",
+    "name": "Zoom logo (Color)",
+    "tags": ["video", "call", "meetings"]
+  }
+]

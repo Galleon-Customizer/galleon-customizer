@@ -1,0 +1,193 @@
+{
+ "page": "Settings",
+ "keys": [
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.system.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.corsair.ctrl.game-mode",
+   "name": "Game Mode",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    },
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.corsair.ctrl.flash-tap",
+   "name": "FlashTap",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    },
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.corsair.ctrl.keyboard-brightness",
+   "name": "Keyboard Brightness",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.elgato.streamdeck.system.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.volume-controller.input-device-control",
+   "name": "Input Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.corsair.ctrl.polling-rate",
+   "name": "Polling Rate",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.system.keybrightness",
+   "name": "Brightness",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.elgato.streamdeck.system.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.corsair.ctrl.theme-selection",
+   "name": "Theme Selection",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.corsair.ctrl.profile-selection",
+   "name": "Profile Selection",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.system.keybrightness",
+   "name": "Brightness",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.elgato.spotify.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+{
+ "name": "Galleon Default Windows",
+ "device": "GRETSCH",
+ "pages": [
+  {
+   "dir": "numpad-2",
+   "name": "Numpad 2"
+  },
+  {
+   "dir": "numpad",
+   "name": "Numpad"
+  },
+  {
+   "dir": "emoji",
+   "name": "Emoji"
+  },
+  {
+   "dir": "settings",
+   "name": "Settings"
+  },
+  {
+   "dir": "page-5",
+   "name": ""
+  },
+  {
+   "dir": "gaming",
+   "name": "Gaming"
+  },
+  {
+   "dir": "page-7",
+   "name": ""
+  },
+  {
+   "dir": "watch",
+   "name": "Watch"
+  },
+  {
+   "dir": "home",
+   "name": "Home"
+  },
+  {
+   "dir": "control",
+   "name": "Control"
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background rectangle similar to theme 1 -->
+  <rect x="36" y="50" width="72" height="44" rx="4" fill="#313237"/>
+  
+  <!-- "Cycle" text centered -->
+  <text x="72" y="78" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">Cycle</text>
+</svg>
