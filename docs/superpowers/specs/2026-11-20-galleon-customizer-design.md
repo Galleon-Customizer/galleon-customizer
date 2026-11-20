@@ -82,12 +82,13 @@ local patch.
   start, with a clear message, if another program holds the device.
 - Device access without root: udev rule with `TAG+="uaccess"` for `2b18`
   (already in this repo as `udev/70-galleon.rules`).
-- Hotkeys and typed text on GNOME Wayland need a virtual keyboard through
-  `/dev/uinput` (udev `uaccess` rule; the module must be loaded). There is no
-  other way on Wayland.
-- The focused application on GNOME Wayland is not available to normal
-  programs. Automatic switching needs a small GNOME Shell extension that
-  reports the focused window's app ID over D-Bus.
+- Hotkeys and typed text go through a virtual keyboard on `/dev/uinput`
+  (udev `uaccess` rule; the module must be loaded); this is the only method
+  that works on Wayland and it also works on X11.
+- The focused application: X11 through EWMH (`_NET_ACTIVE_WINDOW`); KDE
+  Wayland through a small KWin script; GNOME Wayland through a small GNOME
+  Shell extension; other Wayland compositors through their IPC where it exists
+  (Sway, Hyprland), otherwise the feature is unavailable.
 - Screen recording goes through the xdg-desktop-portal ScreenCast (as the
   current `galleon-screenrec` does), with its restore token. Full screenshots
   and the colour picker use the portal Screenshot interface; region capture
@@ -117,6 +118,46 @@ local patch.
   live titles, toggles, long press or fast page switching; cannot reach parity.
 
 The owner picked A.
+
+## Platform support (revised 2026-11-20)
+
+The owner wants every Linux distribution and desktop, used as installed
+("default settings, no custom theme"). Consequences:
+
+- **Standards first.** Anything with a cross-desktop standard uses it and
+  nothing else: xdg-desktop-portal (screenshot, screen recording, colour
+  picker, open URI), MPRIS (media), PipeWire or PulseAudio (`wpctl`, else
+  `pactl`), freedesktop notifications, `loginctl` (lock), `systemctl`
+  (suspend), `.desktop` files and `Gio.AppInfo` (apps), uinput (hotkeys and
+  typed text on X11 and Wayland alike).
+- **Desktop backends** only for what has no standard (dark mode, do not
+  disturb, night light, power dialog, focused app):
+  - tier 1, tested every release: GNOME and KDE Plasma, Wayland and X11;
+  - tier 2, best effort: Cinnamon, XFCE, MATE, Budgie, wlroots compositors
+    (Sway, Hyprland) through a generic backend;
+  - an action the current desktop cannot do is shown greyed out with the
+    reason in the editor and is never put in the default profile; the
+    default profile uses standard actions only.
+- **No dependency on the user's setup.** The app ships its own icon set for
+  every built-in action and a bundled font for key titles, so keys look the
+  same with any icon theme or font configuration. Optional tools (flameshot,
+  tesseract, OBS) only add extra actions; their absence never breaks a
+  default key.
+- **Packaging.** Primary: Flatpak (Flathub) — one package for every
+  distribution, bringing GTK 4, libadwaita, Python, hidapi, Pillow, GStreamer
+  and tesseract with it. The device needs a udev rule on the host, which a
+  sandbox cannot install: on first launch the app detects missing access and
+  shows the single command to run (`pkexec` helper that writes
+  `70-galleon-customizer.rules` and the uinput rule), with an explanation.
+  Secondary: `.deb`, `.rpm` and an AUR package built from the same source, for
+  people who avoid Flatpak; `install.sh` stays for development.
+- **Editor look.** GTK 4 + libadwaita is kept: inside the Flatpak it looks the
+  same on every desktop and follows the system light/dark preference through
+  the portal. A Qt/Kirigami editor was considered for a native look on KDE and
+  rejected: two UI toolkits would double the work for little gain.
+- **Testing matrix** for each release: Ubuntu LTS (GNOME), Fedora (GNOME and
+  KDE), Arch (KDE), Linux Mint (Cinnamon), each on a fresh install with
+  default settings; GNOME and KDE each on Wayland and on X11.
 
 ## Design
 
@@ -180,9 +221,10 @@ The owner picked A.
    name (translatable), icon, settings schema, `run()`, optional live title.
    Built-in actions use the same API. Plugins run in the daemon's process
    (trusted code the user installed).
-6. **GNOME Shell extension** (small, optional) — sends the focused app ID to
-   the daemon over D-Bus for automatic profile/page switching. Without it, the
-   feature is shown as unavailable in the editor.
+6. **Focused-app helpers** (small, optional) — a GNOME Shell extension and a
+   KWin script that send the focused app ID to the daemon over D-Bus; X11 and
+   Sway/Hyprland need no helper. Without one, automatic switching is shown as
+   unavailable in the editor.
 
 ### Configuration
 
@@ -222,11 +264,11 @@ locale; override in preferences.
 
 ### Packaging and install
 
-- Phase 1–2: `install.sh` (user-level install, udev rules with `--system`) and a
-  `.deb` built in CI, published on GitHub Releases. Python dependencies from
-  Ubuntu packages where available (`python3-gi`, `gir1.2-adw-1`, `python3-hid`
-  or `python3-hidapi`, `python3-pil`, `python3-evdev`).
-- Flatpak later, if device access through the sandbox is workable.
+See "Platform support": Flatpak first, then `.deb`/`.rpm`/AUR; `install.sh`
+for development. The phase 1 daemon must already run from the Flatpak
+(`flatpak run --command=galleon-customizerd …`) with `--device=all`,
+`--talk-name=org.freedesktop.portal.*`, `--socket=pulseaudio` and access to
+`/dev/uinput`.
 
 ### Delivery in phases
 
@@ -260,13 +302,15 @@ locale; override in preferences.
   the current key setup moves to `examples/`).
 - App ID `io.github.galleon_customizer.GalleonCustomizer`; commands
   `galleon-customizer` (editor) and `galleon-customizerd` (daemon).
-- First release targets GNOME on Wayland, Ubuntu 24.04 or newer. Desktop-
-  specific code (system actions, focused-app detection) sits behind a small
-  backend interface so KDE/X11 can be added later without rewrites.
+- Runs on any Linux distribution and desktop, and works out of the box on a
+  stock install: someone who never changed their desktop settings and has
+  installed nothing extra must get a fully working default profile.
 
 ## Calls made by the designer (open to change)
 
 - Python + GTK 4 + libadwaita; Pillow for rendering; hidapi; python-evdev.
+- Flatpak as the primary package; tier 1 desktops GNOME and KDE Plasma.
+- Bundled icon set and font for key rendering.
 - Daemon + editor split, talking over session D-Bus.
 - Plugins as Python packages, trusted, in-process.
 - Import of shared profiles asks before enabling commands/hotkeys/text.
