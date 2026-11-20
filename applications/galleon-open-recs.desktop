@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Thư mục video
+Icon=folder-videos
+Exec=xdg-open @HOME@/Videos/Screencasts
+NoDisplay=true
+Terminal=false

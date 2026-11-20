@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Chụp vùng
+Icon=edit-select
+Exec=@HOME@/.local/bin/galleon-shot area
+NoDisplay=true
+Terminal=false

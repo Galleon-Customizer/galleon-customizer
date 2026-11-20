@@ -1,0 +1,425 @@
+{
+  "dials": {
+    "0": {
+      "turn": {
+        "type": "theme"
+      },
+      "press": {
+        "type": "page",
+        "page": "capture"
+      }
+    },
+    "1": {
+      "turn": {
+        "type": "media",
+        "command": "volume",
+        "step": 2
+      },
+      "press": {
+        "type": "media",
+        "command": "mute"
+      }
+    }
+  },
+  "home": "capture",
+  "pages": {
+    "jeux": {
+      "keys": []
+    },
+    "main": {
+      "keys": [
+        {
+          "action": {
+            "command": "previous",
+            "type": "media"
+          },
+          "icon": "media-skip-backward",
+          "key": 0,
+          "label": "Précédent"
+        },
+        {
+          "action": {
+            "command": "play-pause",
+            "type": "media"
+          },
+          "icon": {
+            "paused": "media-playback-start",
+            "playing": "media-playback-pause",
+            "stopped": "media-playback-start"
+          },
+          "key": 1,
+          "label": "Lecture"
+        },
+        {
+          "action": {
+            "command": "next",
+            "type": "media"
+          },
+          "icon": "media-skip-forward",
+          "key": 2,
+          "label": "Suivant"
+        },
+        {
+          "action": {
+            "command": "volume",
+            "step": -5,
+            "type": "media"
+          },
+          "icon": "audio-volume-low",
+          "key": 3,
+          "label": "Vol -"
+        },
+        {
+          "action": {
+            "command": "volume",
+            "step": 5,
+            "type": "media"
+          },
+          "icon": "audio-volume-high",
+          "key": 5,
+          "label": "Vol +"
+        },
+        {
+          "action": {
+            "command": "seek",
+            "seconds": -10,
+            "type": "media"
+          },
+          "icon": "media-seek-backward",
+          "key": 6,
+          "label": "-10 s"
+        },
+        {
+          "action": {
+            "command": "seek",
+            "seconds": 10,
+            "type": "media"
+          },
+          "icon": "media-seek-forward",
+          "key": 8,
+          "label": "+10 s"
+        },
+        {
+          "action": {
+            "command": "stop",
+            "type": "media"
+          },
+          "icon": "media-playback-stop",
+          "key": 11,
+          "label": "Stop"
+        },
+        {
+          "action": {
+            "command": "mute",
+            "type": "media"
+          },
+          "icon": "audio-volume-muted",
+          "key": 4,
+          "label": "Muet"
+        },
+        {
+          "action": {
+            "command": "restart",
+            "type": "media"
+          },
+          "icon": "media-seek-backward",
+          "key": 7,
+          "label": "Début"
+        },
+        {
+          "action": {
+            "command": "shuffle",
+            "type": "media"
+          },
+          "icon": "media-playlist-shuffle",
+          "key": 9,
+          "label": "Aléatoire"
+        },
+        {
+          "action": {
+            "command": "repeat",
+            "type": "media"
+          },
+          "icon": "media-playlist-repeat",
+          "key": 10,
+          "label": "Répéter"
+        }
+      ]
+    },
+    "multimedia": {
+      "keys": [
+        {
+          "action": {
+            "desktop": "/var/lib/snapd/desktop/applications/firefox_firefox.desktop",
+            "type": "app"
+          },
+          "key": 0,
+          "label": "Firefox"
+        },
+        {
+          "action": {
+            "desktop": "/usr/share/applications/google-chrome.desktop",
+            "type": "app"
+          },
+          "key": 1,
+          "label": "Google Chrome"
+        },
+        {
+          "action": {
+            "desktop": "/usr/share/applications/org.gnome.Rhythmbox3.desktop",
+            "type": "app"
+          },
+          "key": 2,
+          "label": "Rhythmbox"
+        },
+        {
+          "action": {
+            "desktop": "/usr/share/applications/vlc.desktop",
+            "type": "app"
+          },
+          "key": 3,
+          "label": "VLC media player"
+        },
+        {
+          "action": {
+            "desktop": "/usr/share/applications/org.gnome.Showtime.desktop",
+            "type": "app"
+          },
+          "key": 4,
+          "label": "Video Player"
+        }
+      ]
+    },
+    "numpad": {
+      "keys": [
+        {
+          "action": {
+            "key": "kp7",
+            "type": "key"
+          },
+          "key": 0,
+          "label": "7"
+        },
+        {
+          "action": {
+            "key": "kp8",
+            "type": "key"
+          },
+          "key": 1,
+          "label": "8"
+        },
+        {
+          "action": {
+            "key": "kp9",
+            "type": "key"
+          },
+          "key": 2,
+          "label": "9"
+        },
+        {
+          "action": {
+            "key": "kp4",
+            "type": "key"
+          },
+          "key": 3,
+          "label": "4"
+        },
+        {
+          "action": {
+            "key": "kp5",
+            "type": "key"
+          },
+          "key": 4,
+          "label": "5"
+        },
+        {
+          "action": {
+            "key": "kp6",
+            "type": "key"
+          },
+          "key": 5,
+          "label": "6"
+        },
+        {
+          "action": {
+            "key": "kp1",
+            "type": "key"
+          },
+          "key": 6,
+          "label": "1"
+        },
+        {
+          "action": {
+            "key": "kp2",
+            "type": "key"
+          },
+          "key": 7,
+          "label": "2"
+        },
+        {
+          "action": {
+            "key": "kp3",
+            "type": "key"
+          },
+          "key": 8,
+          "label": "3"
+        },
+        {
+          "action": {
+            "key": "kp0",
+            "type": "key"
+          },
+          "key": 9,
+          "label": "0"
+        },
+        {
+          "action": {
+            "key": "kpdot",
+            "type": "key"
+          },
+          "key": 10,
+          "label": "."
+        },
+        {
+          "action": {
+            "key": "kpenter",
+            "type": "key"
+          },
+          "key": 11,
+          "label": "Entrée"
+        }
+      ]
+    },
+    "systeme": {
+      "keys": [
+        {
+          "action": {
+            "desktop": "/usr/share/applications/org.gnome.baobab.desktop",
+            "type": "app"
+          },
+          "key": 0,
+          "label": "Disk Usage Analyzer"
+        },
+        {
+          "action": {
+            "desktop": "/usr/share/applications/org.gnome.Nautilus.desktop",
+            "type": "app"
+          },
+          "key": 1,
+          "label": "Files"
+        },
+        {
+          "action": {
+            "desktop": "/usr/share/applications/org.gnome.Ptyxis.desktop",
+            "type": "app"
+          },
+          "key": 2,
+          "label": "Terminal"
+        }
+      ]
+    },
+    "capture": {
+      "keys": [
+        {
+          "key": 0,
+          "label": "Chụp màn",
+          "action": {
+            "type": "app",
+            "desktop": "@HOME@/.local/share/applications/galleon-shot-full.desktop"
+          }
+        },
+        {
+          "key": 1,
+          "label": "Chụp vùng",
+          "action": {
+            "type": "app",
+            "desktop": "@HOME@/.local/share/applications/galleon-shot-area.desktop"
+          }
+        },
+        {
+          "key": 2,
+          "label": "Chụp 3s",
+          "action": {
+            "type": "app",
+            "desktop": "@HOME@/.local/share/applications/galleon-shot-delay.desktop"
+          }
+        },
+        {
+          "key": 3,
+          "label": "Quay ●/■",
+          "action": {
+            "type": "app",
+            "desktop": "@HOME@/.local/share/applications/galleon-screenrec.desktop"
+          }
+        },
+        {
+          "key": 4,
+          "label": "Ảnh",
+          "action": {
+            "type": "app",
+            "desktop": "@HOME@/.local/share/applications/galleon-open-shots.desktop"
+          }
+        },
+        {
+          "key": 5,
+          "label": "Video",
+          "action": {
+            "type": "app",
+            "desktop": "@HOME@/.local/share/applications/galleon-open-recs.desktop"
+          }
+        },
+        {
+          "key": 6,
+          "label": "OBS",
+          "action": {
+            "type": "app",
+            "desktop": "/usr/share/applications/com.obsproject.Studio.desktop"
+          }
+        },
+        {
+          "key": 11,
+          "label": "Nhạc",
+          "icon": "audio-x-generic",
+          "action": {
+            "type": "page",
+            "page": "main"
+          }
+        }
+      ]
+    }
+  },
+  "themes": [
+    {
+      "page": "capture",
+      "name": "Chụp & Quay",
+      "color": "#e53935"
+    },
+    {
+      "color": "#ffd600",
+      "name": "Contrôle",
+      "page": "main",
+      "when": "media"
+    },
+    {
+      "color": "#00bcd4",
+      "name": "Multimédia",
+      "page": "multimedia"
+    },
+    {
+      "color": "#1a237e",
+      "name": "Jeu Vidéo",
+      "page": "jeux"
+    },
+    {
+      "color": "#43a047",
+      "name": "Système",
+      "page": "systeme"
+    },
+    {
+      "color": "#ffffff",
+      "name": "Pavé Numérique",
+      "page": "numpad"
+    }
+  ],
+  "version": 1
+}

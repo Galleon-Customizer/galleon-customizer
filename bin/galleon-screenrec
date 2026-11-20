@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""Toggle screen recording on GNOME Wayland.
+
+First call: asks the screen-cast portal for the screen (the GNOME dialog shows
+only the first time; the choice is remembered with a restore token), then
+records screen + system audio to ~/Videos/Screencasts/*.mp4 with NVENC
+(x264 fallback). Second call: stops cleanly and saves the file.
+"""
+import os
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import gi
+
+gi.require_version("Gst", "1.0")
+from gi.repository import Gio, GLib, Gst  # noqa: E402
+
+STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "galleon-screenrec"
+PIDFILE = STATE / "pid"
+TOKEN = STATE / "restore_token"
+OUTDIR = Path(subprocess.run(["xdg-user-dir", "VIDEOS"], capture_output=True, text=True).stdout.strip()
+              or Path.home() / "Videos") / "Screencasts"
+
+PORTAL = "org.freedesktop.portal.Desktop"
+PATH = "/org/freedesktop/portal/desktop"
+SCREENCAST = "org.freedesktop.portal.ScreenCast"
+
+
+def notify(summary, body="", icon="media-record"):
+    subprocess.run(["notify-send", "-a", "Galleon", "-i", icon, "-h",
+                    "string:x-canonical-private-synchronous:galleon-rec", summary, body],
+                   check=False)
+
+
+def running_pid():
+    try:
+        pid = int(PIDFILE.read_text())
+        os.kill(pid, 0)
+        return pid
+    except (FileNotFoundError, ValueError, ProcessLookupError, PermissionError):
+        return None
+
+
+class Portal:
+    def __init__(self, loop):
+        self.loop = loop
+        self.bus = Gio.bus_get_sync(Gio.BusType.SESSION)
+        self.sender = self.bus.get_unique_name()[1:].replace(".", "_")
+        self.n = 0
+
+    def call(self, method, args, sig, fdlist=None):
+        """Call a portal method that answers through a Request.Response signal."""
+        self.n += 1
+        token = f"galleon{os.getpid()}_{self.n}"
+        handle = f"/org/freedesktop/portal/desktop/request/{self.sender}/{token}"
+        result = {}
+
+        def on_response(_c, _s, _p, _i, _sig, params):
+            code, res = params.unpack()
+            result["code"], result["res"] = code, res
+            self.loop.quit()
+
+        sub = self.bus.signal_subscribe(PORTAL, "org.freedesktop.portal.Request", "Response",
+                                        handle, None, Gio.DBusSignalFlags.NO_MATCH_RULE, on_response)
+        args[-1]["handle_token"] = GLib.Variant("s", token)
+        self.bus.call_with_unix_fd_list_sync(PORTAL, PATH, SCREENCAST, method,
+                                             GLib.Variant(sig, tuple(args)), None,
+                                             Gio.DBusCallFlags.NONE, -1, fdlist, None)
+        self.loop.run()
+        self.bus.signal_unsubscribe(sub)
+        if result.get("code") != 0:
+            raise RuntimeError(f"{method}: đã huỷ hoặc bị từ chối (mã {result.get('code')})")
+        return result["res"]
+
+    def open_screen(self):
+        res = self.call("CreateSession", [{"session_handle_token": GLib.Variant("s", f"galleonsess{os.getpid()}")}],
+                        "(a{sv})")
+        session = res["session_handle"]
+        opts = {"types": GLib.Variant("u", 1),          # monitor
+                "multiple": GLib.Variant("b", False),
+                "cursor_mode": GLib.Variant("u", 2),    # embedded cursor
+                "persist_mode": GLib.Variant("u", 2)}   # remember until revoked
+        if TOKEN.exists():
+            opts["restore_token"] = GLib.Variant("s", TOKEN.read_text().strip())
+        self.call("SelectSources", [session, opts], "(oa{sv})")
+        res = self.call("Start", [session, "", {}], "(osa{sv})")
+        if "restore_token" in res:
+            TOKEN.write_text(res["restore_token"])
+        node = res["streams"][0][0]
+        reply, fds = self.bus.call_with_unix_fd_list_sync(
+            PORTAL, PATH, SCREENCAST, "OpenPipeWireRemote",
+            GLib.Variant("(oa{sv})", (session, {})), GLib.VariantType("(h)"),
+            Gio.DBusCallFlags.NONE, -1, None, None)
+        fd = fds.get(reply.unpack()[0])
+        return session, node, fd
+
+
+def build_pipeline(fd, node, out):
+    def has(name):
+        return Gst.ElementFactory.find(name) is not None
+
+    if has("nvh264enc"):
+        venc = "nvh264enc preset=low-latency-hq rc-mode=vbr bitrate=20000 ! h264parse"
+    else:
+        venc = "x264enc tune=zerolatency speed-preset=veryfast bitrate=12000 ! h264parse"
+    aenc = "avenc_aac bitrate=192000" if has("avenc_aac") else "voaacenc bitrate=192000"
+    desc = (
+        f"pipewiresrc fd={fd} path={node} do-timestamp=true keepalive-time=1000 ! "
+        "videoconvert ! videorate ! video/x-raw,format=NV12,framerate=60/1 ! "
+        f"queue max-size-time=2000000000 ! {venc} ! queue ! mux. "
+        "pulsesrc device=@DEFAULT_MONITOR@ do-timestamp=true ! audioconvert ! audioresample ! "
+        f"queue ! {aenc} ! queue ! mux. "
+        f'mp4mux name=mux faststart=true ! filesink location="{out}"'
+    )
+    return Gst.parse_launch(desc)
+
+
+def record():
+    STATE.mkdir(parents=True, exist_ok=True)
+    OUTDIR.mkdir(parents=True, exist_ok=True)
+    Gst.init(None)
+    loop = GLib.MainLoop()
+    try:
+        _session, node, fd = Portal(loop).open_screen()
+    except Exception as e:  # dialog cancelled or portal error
+        notify("Không quay được", str(e), "dialog-error")
+        return 1
+
+    out = OUTDIR / time.strftime("Quay-%Y-%m-%d_%H-%M-%S.mp4")
+    pipe = build_pipeline(fd, node, out)
+    PIDFILE.write_text(str(os.getpid()))
+
+    def stop(*_):
+        pipe.send_event(Gst.Event.new_eos())
+        return GLib.SOURCE_REMOVE
+
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, stop)
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, stop)
+
+    errors = []
+
+    def on_msg(_bus, msg):
+        if msg.type == Gst.MessageType.EOS:
+            loop.quit()
+        elif msg.type == Gst.MessageType.ERROR:
+            err, _dbg = msg.parse_error()
+            errors.append(err.message)
+            loop.quit()
+
+    bus = pipe.get_bus()
+    bus.add_signal_watch()
+    bus.connect("message", on_msg)
+    pipe.set_state(Gst.State.PLAYING)
+    notify("● Đang quay màn hình", "Bấm lại nút để dừng.")
+    loop.run()
+    pipe.set_state(Gst.State.NULL)
+    PIDFILE.unlink(missing_ok=True)
+    if errors:
+        notify("Quay màn hình bị lỗi", errors[0], "dialog-error")
+        return 1
+    notify("Đã lưu video", str(out), "video-x-generic")
+    return 0
+
+
+def main():
+    pid = running_pid()
+    if pid:
+        os.kill(pid, signal.SIGINT)
+        return 0
+    if len(sys.argv) > 1 and sys.argv[1] == "--stop":
+        return 0
+    # Detach so the launcher (gio launch) returns immediately.
+    if os.fork():
+        return 0
+    os.setsid()
+    return record()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

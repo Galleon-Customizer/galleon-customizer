@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Quay màn hình
+Icon=media-record
+Exec=@HOME@/.local/bin/galleon-screenrec
+NoDisplay=true
+Terminal=false
