@@ -1,4 +1,4 @@
-# galleon-config
+# custom-galleon-linux
 
 Settings for the Corsair Galleon 100 SD Stream Deck keys on Ubuntu (GNOME Wayland),
 driven by [GalleonCore](https://github.com/Paullux/GalleonCore) v0.3.0 built from source.
@@ -38,7 +38,7 @@ Rebuilding GalleonCore with the patch:
 
 ```sh
 git clone --branch v0.3.0 https://github.com/Paullux/GalleonCore.git && cd GalleonCore
-git apply ~/galleon-config/patches/0001-dial-turn-steps-pages.patch
+git apply ~/custom-galleon-linux/patches/0001-dial-turn-steps-pages.patch
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DGALLEON_SOURCE_TREE_PATHS=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
 cmake --build build -j"$(nproc)" && ctest --test-dir build && sudo cmake --install build
 ```
