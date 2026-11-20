@@ -1,0 +1,13 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip_watercolor)">
+<g transform="translate(24, 24) scale(5.647)">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M11 5.3C11 6 10.4 6.5 9.7 6.5C9 6.5 8.5 5.9 8.5 5.3C8.5 4.7 9.1 4 9.8 4C10.5 4 11 4.6 11 5.3ZM6.3 4C5.6 4 5 4.6 5 5.3C5 6 5.6 6.5 6.3 6.5C7 6.5 7.6 5.9 7.6 5.3C7.6 4.7 6.9 4 6.3 4ZM11.3 7C10.6 7 10 7.6 10 8.2C10 8.8 10.6 9.4 11.3 9.4C12 9.4 12.6 8.8 12.6 8.2C12.6 7.6 11.9 7 11.3 7ZM4.8 7C4.1 7 3.5 7.6 3.5 8.2C3.5 8.8 4.1 9.4 4.8 9.4C5.5 9.4 6 8.9 6 8.2C6 7.5 5.4 7 4.8 7ZM8 2C4.7 2 2 4.7 2 8C2 11.3 4.7 14 8 14C8.7 14 9 13.6 9 13.3V11.7C9 11.3 9.3 11 9.7 11H10.7C12.8 11 14 10 14 8C14 4.7 11.3 2 8 2ZM8 0C12.4 0 16 3.6 16 8C16 10.9 14.1 12.9 11 13V13.2C10.9 14.8 9.6 16 8.1 16C8.1 16 8.1 16 8 16C3.6 16 0 12.4 0 8C0 3.6 3.6 0 8 0Z" fill="white"/>
+</g>
+<rect width="144" height="144" rx="24" stroke="white" stroke-width="24"/>
+</g>
+<defs>
+<clipPath id="clip_watercolor">
+<rect width="144" height="144" fill="white"/>
+</clipPath>
+</defs>
+</svg>

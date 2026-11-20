@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="100">
+    <defs>
+         <!-- Top and bottom edges fade in or out. The last stop is the one the plugin rewrites, so
+             last item is not dimmed once it stands in the lowest row. -->
+        <linearGradient id="edgeOut" x1="0" x2="0" y1="0" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#000"/>
+            <stop offset=".24" stop-color="#fff"/>
+            <stop offset=".72" stop-color="#fff"/>
+            <stop offset="1" stop-color="#000" data-listend=""/>
+        </linearGradient>
+        <!-- Right edge: text longer than its row runs out under this. -->
+        <linearGradient id="rightOut" x1="160" x2="200" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#000" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity="1"/>
+        </linearGradient>
+        <!-- Both edges in one mask -->
+        <mask id="listFade" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="100">
+            <rect x="0" y="0" width="200" height="100" fill="url(#edgeOut)"/>
+            <rect x="160" y="0" width="40" height="100" fill="url(#rightOut)"/>
+        </mask>
+        <!-- Indicators for the playing and playabled rows -->
+        <g id="activeMark" fill="#1ed760">
+            <rect x="0" y="11" width="3" height="9" rx="1.5"/>
+            <rect x="6" y="5" width="3" height="15" rx="1.5"/>
+            <rect x="12" y="13" width="3" height="7" rx="1.5"/>
+        </g>
+        <g id="playMark">
+            <path d="M2 5.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212l-10.89 6.288a.7.7 0 0 1-1.05-.606z"/>
+        </g>
+    </defs>
+    <g fill-rule="evenodd" fill="#fff" font-family="Segoe UI" font-size="16" font-weight="600" mask="url(#listFade)">
+        <!-- One row above the display and one below it, so the list has
+             something to move in from. Rows are 24 apart -->
+        <g data-row="" transform="translate(12 -32)">
+            <text class="name" x="22" y="17" data-active-fill="#1db954">Blank Space</text>
+            <!-- active: the bars, shown on the row that is playing -->
+            <use xlink:href="#activeMark" href="#activeMark" opacity="0" data-active-opacity="1"/>
+            <!-- play: the arrow, shown on the row a press would play -->
+            <use xlink:href="#playMark" href="#playMark" opacity="0" data-play-opacity="1"/>
+        </g>
+
+        <g data-row="" transform="translate(12 -8)">
+            <text class="name" x="22" y="17" data-active-fill="#1db954">Blank Space</text>
+            <!-- active: the bars, shown on the row that is playing -->
+            <use xlink:href="#activeMark" href="#activeMark" opacity="0" data-active-opacity="1"/>
+            <!-- play: the arrow, shown on the row a press would play -->
+            <use xlink:href="#playMark" href="#playMark" opacity="0" data-play-opacity="1"/>
+        </g>
+
+        <g data-row="" transform="translate(12 16)">
+            <text class="name" x="22" y="17" data-active-fill="#1db954">Blank Space</text>
+            <!-- active: the bars, shown on the row that is playing -->
+            <use xlink:href="#activeMark" href="#activeMark" opacity="0" data-active-opacity="1"/>
+            <!-- play: the arrow, shown on the row a press would play -->
+            <use xlink:href="#playMark" href="#playMark" opacity="0" data-play-opacity="1"/>
+        </g>
+
+        <g data-row="" transform="translate(12 40)">
+            <text class="name" x="22" y="17" data-active-fill="#1db954">Blank Space</text>
+            <!-- active: the bars, shown on the row that is playing -->
+            <use xlink:href="#activeMark" href="#activeMark" opacity="0" data-active-opacity="1"/>
+            <!-- play: the arrow, shown on the row a press would play -->
+            <use xlink:href="#playMark" href="#playMark" opacity="0" data-play-opacity="1"/>
+        </g>
+
+        <g data-row="" transform="translate(12 64)">
+            <text class="name" x="22" y="17" data-active-fill="#1db954">Blank Space</text>
+            <!-- active: the bars, shown on the row that is playing -->
+            <use xlink:href="#activeMark" href="#activeMark" opacity="0" data-active-opacity="1"/>
+            <!-- play: the arrow, shown on the row a press would play -->
+            <use xlink:href="#playMark" href="#playMark" opacity="0" data-play-opacity="1"/>
+        </g>
+
+        <g data-row="" transform="translate(12 88)">
+            <text class="name" x="22" y="17" data-active-fill="#1db954">Blank Space</text>
+            <!-- active: the bars, shown on the row that is playing -->
+            <use xlink:href="#activeMark" href="#activeMark" opacity="0" data-active-opacity="1"/>
+            <!-- play: the arrow, shown on the row a press would play -->
+            <use xlink:href="#playMark" href="#playMark" opacity="0" data-play-opacity="1"/>
+        </g>
+    </g>
+</svg>

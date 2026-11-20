@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Current + Air Quality" width="232" height="50" viewBox="0 0 232 50" fill="#FFF">
+    <rect id="background" width="116" height="50"/>
+    <rect id="aqi-background" x="116" width="116" height="50"/>
+    <g id="icon" transform="translate(6, 1) scale(0.8)"></g>
+    <text id="temperature" font-size="30" x="56" y="35" font-weight="600">28°</text>
+    <text id="city" font-size="12" x="4" y="46" font-weight="500">City</text>
+    <g transform="translate(116 0)">
+        <g id="aqi-icon" r="17" transform="translate(12, 12)"></g>
+        <text id="aqi-value" font-size="30" x="62" y="35" font-weight="600">28°</text>
+        <text id="aqi-subtitle" x="6" y="46" font-size="12" font-weight="500">xxx</text>
+    </g>
+</svg>

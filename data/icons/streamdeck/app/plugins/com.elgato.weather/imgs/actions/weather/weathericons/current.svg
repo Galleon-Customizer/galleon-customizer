@@ -1,0 +1,20 @@
+<svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient x1="100%" y1="59.574%" x2="0%" y2="43.441%" id="a">
+            <stop stop-color="#147BF3" offset="0%"/>
+            <stop stop-color="#13BFF2" offset="100%"/>
+        </linearGradient>
+    </defs>
+    <g id="current" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" font-family="Arial-BoldMT, Arial" font-size="12" font-weight="bold" >
+        <rect fill="url(#a)" fill-rule="nonzero" x="0" y="0" width="200" height="100" rx="14"/>
+        <g id="Group" transform="translate(26.64 32.64)">
+            <circle id="Oval" fill="#FFD343" fill-rule="nonzero" cx="17.36" cy="17.36" r="8.4"/>
+            <path id="Path" stroke="#FFD343" stroke-width="3.36" stroke-linecap="round" d="M17.36 4.76V0"/>
+            <path stroke="#FFD343" stroke-width="3.36" stroke-linecap="round" d="M17.36 35v-4.76m9.149-21.749 3.365-3.365M5.125 29.874l3.366-3.365M30.24 17.36H35m-35 0h4.76m21.749 9.063 3.365 3.366M5.125 5.04l3.366 3.366"/>
+        </g>
+        <text x="99" y="26" font-size="12" letter-spacing=".6" fill="#FFF">MON</text>
+        <text x="99" y="82" font-size="12" letter-spacing=".6" fill="#FFF">NOTTINGHAM</text>
+        <text x="100" y="63.333" font-size="36" letter-spacing="1" fill="#FFF">20°</text>
+        <path stroke="#FFF" opacity=".237" stroke-linecap="round" d="M85.5 16v68"/>
+    </g>
+</svg>

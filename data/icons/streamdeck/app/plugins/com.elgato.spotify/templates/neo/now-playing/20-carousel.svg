@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Carousel" width="232" height="50" viewBox="0 0 232 50" fill="#FFF" font-size="14" font-weight="590" >
+    <defs>
+        <mask id="coverMask" maskUnits="userSpaceOnUse" x="0" y="0" width="38" height="38">
+            <rect x="0" y="0" width="38" height="38" rx="4" ry="4" fill="#fff"/>
+        </mask>
+    </defs>
+
+
+    <g id="cover" size="38" transform="translate(6 6)" mask="url(#coverMask)"></g>
+    <g id="animation" pause="10" clip="50 2 178 46">
+        <g><!-- slide -->
+              <text id="title" x="50" y="21" clip-width="172"></text>
+              <text id="artist" x="50" y="39" fill="#B3B3B3">Artist</text>
+        </g>
+        <g><!-- slide -->
+            <text x="50" y="21" fill="#B3B3B3">Album</text>
+            <text id="track.album" x="50" y="39" clip-width="172"></text>
+        </g>
+        <g><!-- slide -->
+            <text x="50" y="21" fill="#B3B3B3">Duration</text>
+            <text id="duration" x="224" y="21" opacity=".7" text-anchor="end"></text>
+            <text x="550" y="38" fill="#B3B3B3">Position</text>
+            <text id="position" x="224" y="39" fill="#B3B3B3" text-anchor="end"></text>
+        </g>
+    </g>
+</svg>

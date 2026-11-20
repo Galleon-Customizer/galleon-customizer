@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Dynamic" width="232" height="50" viewBox="0 0 232 50" fill="#FFF">
+    <!-- A 232x50 bar. An element says what it shows with an `id`, which may be
+         a dotted path — `current.humidity` reaches into whatever the plugin
+         holds. A name nothing answers to is left as it stands, so what is
+         written here is what a drawing program shows.
+
+         On a <text>:
+           clip-width      room from its own x; past that the value fades out
+           max-chars       cut to that many characters, ending with an ellipsis
+           font-size-alt   the size used once a value runs long
+
+         On an empty <g>, the plugin draws into it at the size asked for:
+           size / width / height / r
+
+         Every group directly inside the animation group is a slide, in the
+         order written. A slide showing one thing can be that thing; one showing
+         several needs a group around them. On the animation group:
+           direction         up, down, left, right
+           duration          seconds a transition takes; nought holds it still
+           pause             seconds a slide rests before the next comes
+           fps               frames per second while moving
+           animation-height  how far a slide travels; the whole bar by default
+           animation-width   the same, going sideways
+           clip              "x y w h", the box a slide must stay inside
+
+         What is written here is the starting point; a setting made in the
+         Property Inspector wins over it. -->
+    <g id="icon"></g>
+    <text id="temperature" x="56" y="35" font-size="30" font-weight="600">28°</text>
+    <g id="animation" fps="15" duration="1" pause="10">
+        <g>
+            <text id="city" font-size="14" text-anchor="end" x="224" y="20">Bad Bevensen</text>
+            <text id="condition" font-size="12" opacity=".6" text-anchor="end" x="224" y="38">Mostly Sunny</text>
+        </g>
+        <g id="forecast" fill="#FFF" fill-rule="evenodd" font-weight="600" transform="translate(122 3)"></g>
+        <g transform="translate(116 0)">
+            <rect id="aqi-background" x="0" width="116" height="50"/>
+            <g id="aqi-icon" r="17" transform="translate(14, 12)"></g>
+            <text id="aqi-value" font-size="30" x="62" y="35" font-weight="600">28°</text>
+            <text id="aqi-subtitle" x="6" y="46" font-size="12" font-weight="500">xxx</text>
+        </g>
+        <g id="chart" width="120" height="50" transform="translate(112 0)"></g>
+    </g>
+</svg>

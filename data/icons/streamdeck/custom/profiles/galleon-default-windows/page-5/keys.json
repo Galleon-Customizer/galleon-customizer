@@ -1,0 +1,149 @@
+{
+ "page": "",
+ "keys": [
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.profile.backtoparent",
+   "name": "Parent Folder",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "9VSDB6CRTT59LBA72JSBADTMMKZ.png",
+     "title": "Dun dun"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "SEMGMO1D8D33N90H819OK7BSW0Z.png",
+     "title": "Cat Laugh"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "3GGCH3A35515W14G5QESA8NRQ4Z.png",
+     "title": "Deja vu"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "L9J85RCOL55AW53V3SW13L692CZ.png",
+     "title": "Sad violin"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "BD3V07CMCL3GL9O987RD2R33NOZ.png",
+     "title": "What?"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "H44JFFPSA11S1DCL0W6I6HWR2GZ.png",
+     "title": "Rick Roll"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "6H0IF3HNN90L92HEAGG0J2LB0OZ.png",
+     "title": "Serious?"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "98IR7M44CD445D5WST48S8323GZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "SJ18GTW4451SHBBK7BMA0D85Q4Z.png",
+     "title": "Error"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "ATJOH2S1W57051S4BS5A86ENA0Z.png",
+     "title": "Bruh"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.soundboard.playaudio",
+   "name": "Play Audio",
+   "states": [
+    {
+     "image": "S5WB44IGKH66J7R15VOTIJ7GDGZ.png",
+     "title": "No care"
+    }
+   ]
+  }
+ ]
+}

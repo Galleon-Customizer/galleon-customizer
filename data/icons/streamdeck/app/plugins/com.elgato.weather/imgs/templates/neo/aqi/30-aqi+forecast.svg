@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Air Quality + Forecast" width="232" height="50" viewBox="0 0 232 50" fill="#FFF">
+    <rect id="aqi-background"/>
+    <g id="aqi-icon" r="16" transform="translate(6, 9)"></g>
+    <text id="aqi-value" x="56" y="35" font-size="30" font-weight="600">56</text>
+    <text id="aqi-subtitle" x="4" y="46" font-size="12" font-weight="500">Moderate</text>
+    <g id="aqi-forecast" fill="#FFF" font-weight="600" transform="translate(120 3)"></g>
+</svg>

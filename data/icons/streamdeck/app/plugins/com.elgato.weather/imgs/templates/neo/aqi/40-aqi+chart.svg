@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Air Quality + Chart" width="232" height="50" viewBox="0 0 232 50" fill="#FFF">
+    <rect id="aqi-background"/>
+    <g id="aqi-icon" r="16" transform="translate(6, 9)"></g>
+    <text id="aqi-value" x="56" y="35" font-size="30" font-weight="600">56</text>
+    <g id="aqi-chart" width="128" height="50" transform="translate(108 0)"></g>
+    <text id="city" x="4" y="46" font-size="12" font-weight="500">City</text>
+</svg>

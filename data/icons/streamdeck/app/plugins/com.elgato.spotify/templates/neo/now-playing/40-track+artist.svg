@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Title + Artist" width="232" height="50" viewBox="0 0 232 50" fill="#FFF" font-size="22" font-weight="600">
+    <!-- <rect id="background" width="232" height="50" fill="#f00"/> -->
+    <g id="animation" direction="up" pause="10" duration="0.8">
+        <g>            <!-- slide -->
+            <text id="title" x="12" y="32" font-size="22" fit-chars="20" font-size-alt="14" clip-width="224">Track name</text>
+        </g>
+        <g>            <!-- slide -->
+            <text id="artist" x="12" y="32" font-size="22" fade-from="0.8" fit-chars="20" font-size-alt="20" clip-width="224" opacity=".7">Artist</text>
+        </g>
+        <g>            <!-- slide -->
+            <text id="elapsed" x="116" y="32" font-size="22" opacity=".7" text-anchor="middle">0:00 / 0:00</text>
+        </g>
+    </g>
+</svg>

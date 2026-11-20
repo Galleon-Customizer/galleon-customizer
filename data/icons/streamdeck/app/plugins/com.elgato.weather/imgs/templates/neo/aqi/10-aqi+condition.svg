@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Air Quality + Pollutants" width="232" height="50" viewBox="0 0 232 50" fill="#FFF" font-weight="700" font-size="13">
+    <rect id="aqi-background"/>
+    <text id="aqi-heading" x="66" y="20" font-size="13" opacity=".8"></text>
+    <text id="aqi-value" x="32" y="35" font-size="30" text-anchor="middle"></text>
+    <text id="aqi-subtitle" x="66" y="38" font-size="13" opacity=".8"></text>
+
+    <path d="M132 8v34" stroke="#FFF" stroke-width="1" opacity=".25" stroke-linecap="round"/>
+    <!-- Slides: every group directly inside the animation group is one, in the
+         order they appear here. Each of these shows four readings, so each
+         needs a group around them; a slide showing one thing can be that thing. -->
+    <g id="animation" pause="10">
+        <g>
+            <text id="aqi-pollutant1-label" x="148" y="20" opacity=".7"></text>
+            <text id="aqi-pollutant1-value" x="218" y="20" text-anchor="end"></text>
+            <text id="aqi-pollutant2-label" x="148" y="38" opacity=".7"></text>
+            <text id="aqi-pollutant2-value" x="218" y="38" text-anchor="end"></text>
+        </g>
+        <g>
+            <text id="aqi-pollutant3-label" x="148" y="20" opacity=".7"></text>
+            <text id="aqi-pollutant3-value" x="218" y="20" text-anchor="end"></text>
+            <text id="aqi-pollutant4-label" x="148" y="38" opacity=".7"></text>
+            <text id="aqi-pollutant4-value" x="218" y="38" text-anchor="end"></text>
+        </g>
+    </g>
+</svg>

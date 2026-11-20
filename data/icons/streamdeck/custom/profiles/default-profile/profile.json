@@ -1,0 +1,10 @@
+{
+ "name": "Default Profile",
+ "device": "AI Stream Deck",
+ "pages": [
+  {
+   "dir": "page-1",
+   "name": ""
+  }
+ ]
+}

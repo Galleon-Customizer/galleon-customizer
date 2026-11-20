@@ -1,0 +1,11 @@
+{
+    "Name": "Elgato Logo Icons (White)",
+    "Version": "2.0.0",
+    "Description": "A collection of popular brand logos in white, suitable for dark backgrounds.",
+    "Author": "Elgato Systems",
+    "URL": "https://www.elgato.com",
+    "Icon": "icon.svg",
+    "License": "license.txt",
+    "pinned": "true",
+    "canhide": "true"
+}

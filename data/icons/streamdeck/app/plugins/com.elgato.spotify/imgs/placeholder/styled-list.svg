@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="100">
+    <defs>
+        <mask id="coverMask" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
+            <rect x="0" y="0" width="40" height="40" rx="5" ry="5" fill="#fff"/>
+        </mask>
+        <mask id="ovalMask" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
+            <rect x="0" y="0" width="40" height="40" rx="20" ry="20" fill="#fff"/>
+        </mask>
+        <!-- Top and bottom edges fade in or out. The last stop is the one the plugin rewrites, so
+             last item is not dimmed once it stands in the lowest row. -->
+        <linearGradient id="edgeOut" x1="0" x2="0" y1="0" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#000"/>
+            <stop offset=".24" stop-color="#fff"/>
+            <stop offset=".72" stop-color="#fff"/>
+            <stop offset="1" stop-color="#000" data-listend=""/>
+        </linearGradient>
+        <!-- Both edges in one mask. -->
+        <mask id="listFade" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="100">
+            <rect x="0" y="0" width="200" height="100" fill="url(#edgeOut)"/>
+        </mask>
+        <!-- Right edge: text longer than its row runs out under this -->
+        <linearGradient id="fadeOut" x1="0" x2="188" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#fff"/>
+            <stop offset=".79" stop-color="#fff"/>
+            <stop offset="1" stop-color="#000"/>
+        </linearGradient>
+        <mask id="rowFade" maskUnits="userSpaceOnUse" x="0" y="0" width="188" height="40">
+            <rect x="0" y="0" width="188" height="40" fill="url(#fadeOut)"/>
+        </mask>
+    </defs>
+    <g fill-rule="evenodd" fill="#fff" font-family="Segoe UI" font-size="16" font-weight="600" mask="url(#listFade)">
+        <g transform="translate(12 -60)">
+            <text class="name" mask="url(#rowFade)" x="46" y="16" data-single-y="26" data-active-fill="#1db954">Blank Space</text>
+            <text class="title" mask="url(#rowFade)" x="46" y="37" fill="#b3b3b3">Taylor Swift</text>
+            <g class="icon" data-info="icon" width="40" height="40" rx="5"></g>
+            <g class="marker" transform="translate(168 12)"></g>
+        </g>
+
+        <g transform="translate(12 -12)">
+            <text class="name" mask="url(#rowFade)" x="46" y="16" data-single-y="26" data-active-fill="#1db954">Blank Space</text>
+            <text class="title" mask="url(#rowFade)" x="46" y="37" fill="#b3b3b3">Taylor Swift</text>
+            <g class="icon" data-info="icon" width="40" height="40" rx="5"></g>
+            <g class="marker" transform="translate(168 12)"></g>
+        </g>
+
+        <!-- The selected row -->
+        <g transform="translate(12 36)">
+            <text class="name" mask="url(#rowFade)" x="46" y="16" data-single-y="26" data-active-fill="#1db954">Blank Space</text>
+            <text class="title" mask="url(#rowFade)" x="46" y="37" fill="#b3b3b3">Taylor Swift</text>
+            <g class="icon" data-info="icon" width="40" height="40" rx="5"></g>
+            <g class="marker" transform="translate(168 12)"></g>
+        </g>
+
+        <g transform="translate(12 84)">
+            <text class="name" mask="url(#rowFade)" x="46" y="16" data-single-y="26" data-active-fill="#1db954">Blank Space</text>
+            <text class="title" mask="url(#rowFade)" x="46" y="37" fill="#b3b3b3">Taylor Swift</text>
+            <g class="icon" data-info="icon" width="40" height="40" rx="5"></g>
+            <g class="marker" transform="translate(168 12)"></g>
+        </g>
+
+        <g transform="translate(12 132)">
+            <text class="name" mask="url(#rowFade)" x="46" y="16" data-single-y="26" data-active-fill="#1db954">Blank Space</text>
+            <text class="title" mask="url(#rowFade)" x="46" y="37" fill="#b3b3b3">Taylor Swift</text>
+            <g class="icon" data-info="icon" width="40" height="40" rx="5"></g>
+            <g class="marker" transform="translate(168 12)"></g>
+        </g>
+    </g>
+
+    <!-- Indicator - much like a small, non-resizing thumb. -->
+    <!-- <rect data-scroll-body="" x="194" y="0" width="6" height="100" fill="#000" fill-opacity="1"/>
+    <g data-scroll-indicator="" data-height="2" transform="translate(196 0)">
+        <rect width="4" height="2" fill="#fff" fill-opacity=".8"/>
+    </g> -->
+
+     <!-- Scrollbar - much like a MacOS scrollbar. -->
+    <!-- <rect data-scroll-track="" x="197" y="4" width="3" height="92" rx="1.5" fill="#fff" fill-opacity=".15"/>
+    <rect data-scroll-thumb="" x="197" y="4" width="3" height="92" rx="1.5" fill="#1db954" fill-opacity=".9"/> -->
+</svg>

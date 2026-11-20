@@ -1,0 +1,34 @@
+{
+ "name": "Minh Spark",
+ "device": "GRETSCH",
+ "pages": [
+  {
+   "dir": "chup-phim-tat",
+   "name": "Chụp & Phím tắt"
+  },
+  {
+   "dir": "phim-so",
+   "name": "Phím số"
+  },
+  {
+   "dir": "claude-codex",
+   "name": "Claude & Codex"
+  },
+  {
+   "dir": "ky-hieu",
+   "name": "Ký hiệu"
+  },
+  {
+   "dir": "youtube",
+   "name": "YouTube"
+  },
+  {
+   "dir": "phien-ai",
+   "name": "Phiên AI"
+  },
+  {
+   "dir": "page-7",
+   "name": ""
+  }
+ ]
+}

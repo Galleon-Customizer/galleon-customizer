@@ -1,0 +1,205 @@
+{
+ "page": "Gaming",
+ "keys": [
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.system.openapp",
+   "name": "Open Application",
+   "states": [
+    {
+     "image": "BFISRM0LB91O3E6FBMVOPTRCK0Z.png",
+     "title": "Steam"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.elgato.discord.soundboard",
+   "name": "Soundboard",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.elgato.discord.deafen",
+   "name": "Deafen",
+   "states": [
+    {
+     "image": "DI2HLLSCG11730NW1H8GKDWBICZ.png",
+     "title": ""
+    },
+    {
+     "image": "TW5HTAKB396C11PH1EWRGOVIWOZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "NKID3PANQP4613GL6ONR2F4K30Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.elgato.streamdeck.system.openapp",
+   "name": "Open Application",
+   "states": [
+    {
+     "image": "1ODKD933AP09N6KG39HV3FOD3KZ.png",
+     "title": "Epic\nGames"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.discord.streamtoggle",
+   "name": "Stream Toggle",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    },
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.elgato.discord.mute",
+   "name": "Mute",
+   "states": [
+    {
+     "image": "J8TBTC69ST4R5BFL95JT6RVKJ0Z.png",
+     "title": ""
+    },
+    {
+     "image": "L2E3MN4AD51RN3OC5JISLASHC8Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "73EEHDOAFL45597M6J2DNR7KKOZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.elgato.discord.notifications",
+   "name": "Notifications",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.elgato.discord.channel.voice",
+   "name": "Voice Channel",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    },
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.elgato.discord.videotoggle",
+   "name": "Video Toggle",
+   "states": [
+    {
+     "image": "JO9NDTTGRL15F3GH5NJOVKDAJCZ.png",
+     "title": "Video\nToggle"
+    },
+    {
+     "image": "ET8D3VB3JD4J9EO4L74PIPHCGSZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "LA16SM679L5C1BW543OSFM5HE8Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.elgato.spotify.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

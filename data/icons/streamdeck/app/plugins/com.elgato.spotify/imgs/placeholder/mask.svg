@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="100" viewBox="0 0 200 100">
+    <defs>
+        <linearGradient id="b" x1="50%" x2="50%" y1="-4%" y2="104%">
+            <stop offset="0%"/>
+            <stop offset="33%" stop-opacity="0"/>
+            <stop offset="66%" stop-opacity="0"/>
+            <stop offset="100%"/>
+        </linearGradient>
+        <!-- Right edge: text longer than its row runs out under this. -->
+        <!-- <linearGradient id="d" x1="0%" x2="100%" y1="50%" y2="50%">
+            <stop offset="10%" stop-opacity=".2"/>
+            <stop offset="100%"/>
+        </linearGradient> -->
+    </defs>
+    <g fill="none">
+        <!-- Fade at the top and bottom. With a scrollbar or indicator on the right,
+                 stop this at its left edge, or it darkens what sits at either end. -->
+        <rect width="200" height="100" fill="url(#b)"/>
+        <!-- fade to the right, but keep place for the scrollbar-->
+        <!-- <rect x="154" y="0" width="43" height="100" fill="url(#d)"/> -->
+        <!-- fade to the right, without scollbar-->
+        <rect x="154" y="0" width="46" height="100" fill="url(#d)"/>
+    </g>
+</svg>

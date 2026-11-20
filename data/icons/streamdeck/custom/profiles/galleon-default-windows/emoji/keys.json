@@ -1,0 +1,185 @@
+{
+ "page": "Emoji",
+ "keys": [
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.elgato.spotify.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "O19ON0K9ED3JDBLMNVJEV19G5CZ.png",
+     "title": "👏"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "HFBDHB40OD1LB75QC9WMRWQRQ0Z.png",
+     "title": "🤔"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "CJP7HGFAI92GL3QPBJR2JCVFK0Z.png",
+     "title": "😈"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "N0QLL0ET2T2HPA7OQN72RB6V38Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "PAKRLKBVSD5N919LL5QBKH4DA8Z.png",
+     "title": "🔥"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "SR1HL3EPRD1HB7BRI9A2BHTNWGZ.png",
+     "title": "❤️"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "60E9WW1EFP5KJCB2NHOHLVFCASZ.png",
+     "title": "🤯"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "INSV9EVASD1N13PCJQWQNG8NAOZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "0KA22DF4L92E9ES6FOTIHBEQ0SZ.png",
+     "title": "😂"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "CD56FGI83L2Q9FD8HADGH0BJ50Z.png",
+     "title": "😅"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.elgato.streamdeck.system.text",
+   "name": "Text",
+   "states": [
+    {
+     "image": "DHWHTFVO1L2LL4VWO00CWRV3W0Z.png",
+     "title": "🎉"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "1354D14HBD61J47HTCMMPN4O8CZ.png",
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

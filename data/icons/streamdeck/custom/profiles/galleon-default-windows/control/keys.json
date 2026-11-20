@@ -1,0 +1,185 @@
+{
+ "page": "Control",
+ "keys": [
+  {
+   "controller": "Keypad",
+   "position": "0,0",
+   "action": "com.elgato.window-mover.layout",
+   "name": "Layout",
+   "states": [
+    {
+     "image": "EAQD07A66T76J8DF3HQ4Q17390Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,1",
+   "action": "com.elgato.window-mover.layout",
+   "name": "Layout",
+   "states": [
+    {
+     "image": "CAL73SQS2L0DLF3MLQDS1ODAE8Z.png",
+     "title": "Move app\nwindows\nwith ease\n"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,2",
+   "action": "com.elgato.streamdeck.system.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": "Q2BE1LQATL2DJ36BC7PMRVK7BOZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "0,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "SA3PSBS8D118H7IHJ3K37FLPRSZ.png",
+     "title": "Numpad"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,0",
+   "action": "com.elgato.window-mover.maximize",
+   "name": "Maximize",
+   "states": [
+    {
+     "image": "K6OLR7ECW93GR9E45TSIKJM3CSZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,1",
+   "action": "com.elgato.window-mover.layout",
+   "name": "Layout",
+   "states": [
+    {
+     "image": "VG0IM6FSMD0EF3J1958MIS3KTOZ.png",
+     "title": "with the\nWindow\nMover\nPlugin\n"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,2",
+   "action": "com.elgato.streamdeck.system.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": "W50KJALKTT1NWD1V6TR4KPA3VOZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "1,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "B3D83W52NT68NDF1MKAEA3S0L0Z.png",
+     "title": "Home"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,0",
+   "action": "com.elgato.window-mover.layout",
+   "name": "Layout",
+   "states": [
+    {
+     "image": "3PR1SCF5FD4PL9WDE6J348J0FSZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,1",
+   "action": "com.elgato.window-mover.layout",
+   "name": "Layout",
+   "states": [
+    {
+     "image": "4ARLFLK7312GT2I307WSH573H4Z.png",
+     "title": "Choose a\ndisplay in\nsoftware\nto start!\n"
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,2",
+   "action": "com.elgato.streamdeck.system.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": "28NJJ9WKMP0QR0MO7GE9O0J2JOZ.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Keypad",
+   "position": "2,3",
+   "action": "com.elgato.streamdeck.page.goto",
+   "name": "Go to Page",
+   "states": [
+    {
+     "image": "416R8D4TK12ER4QBJ7IOHER020Z.png",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "0,0",
+   "action": "com.elgato.streamdeck.keys.adaptor",
+   "name": "Action Trigger",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,0",
+   "action": "com.elgato.volume-controller.output-device-control",
+   "name": "Output Device Control",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  },
+  {
+   "controller": "Encoder",
+   "position": "1,1",
+   "action": "com.elgato.spotify.multimedia",
+   "name": "Multimedia",
+   "states": [
+    {
+     "image": null,
+     "title": ""
+    }
+   ]
+  }
+ ]
+}

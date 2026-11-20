@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" name="Current + Condition" width="232" height="50" viewBox="0 0 232 50" fill="#FFF">
+    <!-- To reach into the data, use "id", "data-infobar" or the shorter "data-info". All three work the same.
+        You can use dot-notation to use nested values: "current.humidity" or "hourly.0.time" -->
+     <g id="icon"></g>
+    <text id="temperature" x="56" y="35" font-size="30" font-weight="600">28°</text>
+    <text id="city" font-size="14" text-anchor="end" x="224" y="20">Bad Bevensen</text>
+    <text id="condition" font-size="12" opacity=".6" text-anchor="end" x="224" y="38">Mostly Sunny</text>
+</svg>
