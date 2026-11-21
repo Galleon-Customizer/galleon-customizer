@@ -15,6 +15,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocale>
 #include <QSet>
 #include <QSignalSpy>
 #include <QTemporaryDir>
@@ -251,7 +252,18 @@ class TestPagesController : public QObject
 {
     Q_OBJECT
 
+    // The messages are checked in English: neither the system language nor the
+    // language chosen in the user's own settings window may change them.
+    QTemporaryDir m_config;
+
 private Q_SLOTS:
+    void initTestCase()
+    {
+        QLocale::setDefault(QLocale(QLocale::English));
+        QVERIFY(m_config.isValid());
+        qputenv("XDG_CONFIG_HOME", m_config.path().toUtf8());
+    }
+
     // Ported from the Python app: open, run, several actions, toggle, long press.
     void urlFileAndCommandKeys()
     {
