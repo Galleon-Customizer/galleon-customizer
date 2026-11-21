@@ -1,0 +1,3 @@
+These files are logos that are trademarks of their owners, named in SPDX-FileCopyrightText.
+They are not covered by the licenses of this project. They are used only to identify the
+service a quota card refers to, and their use implies no endorsement by the owners.

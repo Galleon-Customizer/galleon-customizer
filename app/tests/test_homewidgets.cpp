@@ -427,7 +427,7 @@ exit 2
         const QTemporaryDir dir;
         HomeWidgets writer(nullptr, dir.filePath("widgets.json"));
         HomeWidgets reader(nullptr, dir.filePath("widgets.json"));
-        QCOMPARE(writer.layout().size(), 7);
+        QCOMPARE(writer.layout().size(), 10);
         QVERIFY(writer.layout()[0].toMap().value("enabled").toBool());
         for (int i = 1; i < writer.layout().size(); ++i) QVERIFY(!writer.layout()[i].toMap().value("enabled").toBool());
         QVERIFY(writer.setWidget("cpu", true, 400, 20, 200, 60));
@@ -484,9 +484,9 @@ exit 2
         HomeWidgets reader(nullptr, file);
         QCOMPARE(reader.fpsConfig().value("source").toString(), dir.path());
         QCOMPARE(reader.fpsConfig().value("process").toString(), QStringLiteral("Game.exe"));
-        QCOMPARE(reader.layout().last().toMap().value("textSize").toInt(), 40);
+        QCOMPARE(reader.layout()[6].toMap().value("textSize").toInt(), 40);
         QVERIFY(reader.setWidget("fps", true, 400, 20, 200, 60));
-        QCOMPARE(reader.layout().last().toMap().value("textSize").toInt(), 40);
+        QCOMPARE(reader.layout()[6].toMap().value("textSize").toInt(), 40);
     }
 #ifdef Q_OS_WIN
     void bosunObservesFreshDaemonStateAndRejectsStaleState() {

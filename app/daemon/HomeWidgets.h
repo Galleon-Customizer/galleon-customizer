@@ -36,6 +36,8 @@ public:
     explicit HomeWidgets(QObject *parent = nullptr, QString file = {}, bool draftMode = false);
     [[nodiscard]] FpsSetup *fpsSetup() { return &m_fpsSetup; }
     [[nodiscard]] QVariantList layout() const { return m_layout; }
+    // Reads the output volume now (after a dial turn), not at the next 2 s refresh.
+    void refreshVolume();
     [[nodiscard]] QVariantMap values() const {
         auto result = m_values;
         const auto city = m_location.value(QStringLiteral("city")).toString().trimmed().left(80);
@@ -96,6 +98,9 @@ private:
     bool save();
     bool write();
     void weather();
+    void pollVolume();
+    void pollQuota();
+    [[nodiscard]] bool widgetEnabled(const QString &id) const;
     void pollGameSensors();
     void pollGpu();
     FpsSetup m_fpsSetup;
@@ -134,6 +139,8 @@ private:
     QTimer m_timer;
     QNetworkAccessManager m_network;
     bool m_weatherPending = false;
+    bool m_quotaPending = false;
+    qint64 m_quotaAt = 0;
     qint64 m_weatherAt = 0;
     quint64 m_cpuTotal = 0, m_cpuIdle = 0;
 };

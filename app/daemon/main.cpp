@@ -3,6 +3,7 @@
 
 #include <InitialPages.h>
 
+#include "ScreenLanguage.h"
 #include "AppsBackend.h"
 #include "DesktopEntries.h"
 #include "PlatformBackends.h"
@@ -429,6 +430,10 @@ QString defaultWidgetFile(const QString &fromCommandLine)
 int main(int argc, char *argv[])
 {
     const QGuiApplication app(argc, argv);
+    // The screen speaks the language of the settings window.
+    galleond::ScreenTranslator screenTranslator;
+    galleond::applyScreenLanguage(screenTranslator, QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+                                                        + QStringLiteral("/galleon-customizer/bosun.conf"));
     QGuiApplication::setApplicationName(QStringLiteral("galleon-customizerd"));
     QGuiApplication::setApplicationVersion(QStringLiteral(PROJECT_VERSION_STRING));
 
