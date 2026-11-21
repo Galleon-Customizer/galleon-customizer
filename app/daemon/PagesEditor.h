@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <QJsonObject>
 #include <QString>
 #include <QStringList>
 
@@ -29,6 +30,13 @@ struct KeySpec
     int appid = 0;
     QString label; // empty: the default (an application's own name)
     QString icon;  // empty: the default (an application's own icon)
+    QString keys;     // combo: "ctrl+shift+s"
+    QString text;     // text: what is typed
+    bool enter = false;
+    QString url;      // url: the address; file: the path
+    QString shell;    // command: the command line
+    bool terminal = false;
+    QJsonObject options; // a ready-made action (type "system.lock"...): its options
 
     friend bool operator==(const KeySpec &, const KeySpec &) = default;
 };
@@ -55,6 +63,11 @@ public:
     // Puts on key `key` of `page` what `spec` says, whatever was there (the old label and icon
     // go; the words of a shuffle or repeat key stay when it stays one).
     static EditResult setKey(const QString &file, const QString &page, int key, const KeySpec &spec);
+    // `spec.type` "keep": the key's action stays as it is (a multi-action or a toggle, which the
+    // window does not edit); only its label and icon change. A long press and a look always stay.
+
+    // Replaces the whole file by `json` (a saved profile), checked like any pages file first.
+    static EditResult replaceAll(const QString &file, const QByteArray &json);
 
     // A second page for `parent` (a "plus" page): `name` is made, empty but for a key that goes
     // back, and a key of `parent` leads to it (the last free one, the 12th when it is free). Refused

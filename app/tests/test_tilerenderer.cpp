@@ -46,6 +46,31 @@ class TestTileRenderer : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void aKeyLookChangesItsColoursAndHidesItsTitle()
+    {
+        const TileRenderer renderer;
+        KeyConfig plain;
+        plain.label = QStringLiteral("Hello");
+        KeyConfig styled = plain;
+        styled.look.background = QStringLiteral("#FF0000");
+        styled.look.titleColor = QStringLiteral("#00FF00");
+        const QImage red = renderer.render(styled, {}, false);
+        QCOMPARE(QColor(red.pixel(20, 80)), QColor(0xff, 0, 0));
+        KeyConfig hidden = styled;
+        hidden.look.showTitle = false;
+        const QImage bare = renderer.render(hidden, {}, false);
+        QVERIFY(bare != red);
+        int green = 0;
+        for (int y = 0; y < red.height(); ++y)
+            for (int x = 0; x < red.width(); ++x)
+                green += QColor(red.pixel(x, y)).green() > 200 && QColor(red.pixel(x, y)).red() < 80 ? 1 : 0;
+        QVERIFY(green > 20); // the title is drawn in its colour
+        KeyConfig top = plain;
+        top.look.titlePosition = TitlePosition::Top;
+        top.look.fontSize = 12;
+        QVERIFY(renderer.render(top, {}, false) != renderer.render(plain, {}, false));
+    }
+
     void recordingIconsWorkWithoutAnyDesktopIconTheme()
     {
         const QString original = QIcon::themeName();

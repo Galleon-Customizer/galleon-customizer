@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "BuiltinActions.h"
 #include "DesktopEntries.h"
 #ifdef Q_OS_WIN
 #include "LauncherCache.h"
@@ -75,6 +76,19 @@ public:
     void setUsageFile(const QString &file);
     using SteamLauncher = std::function<bool(int appid)>;
     void setSteamLauncher(SteamLauncher launcher) { m_steamLauncher = std::move(launcher); }
+    // Opens a web address or a file (QDesktopServices by default; replaced in the tests).
+    using Opener = std::function<bool(const QUrl &)>;
+    void setOpener(Opener opener) { m_opener = std::move(opener); }
+    // Runs a command line, in a terminal if asked (detached /bin/sh -c by default).
+    using CommandRunner = std::function<bool(const QString &command, bool terminal)>;
+    void setCommandRunner(CommandRunner runner) { m_commandRunner = std::move(runner); }
+    // Runs a toggle's status command and calls `done` with 1 (exit 0), 0 (other exit) or -1 (could not run).
+    using StatusReader = std::function<void(const QString &command, std::function<void(int)> done)>;
+    void setStatusReader(StatusReader reader) { m_statusReader = std::move(reader); }
+    // On (true) or off for the toggle on `key` of the current page.
+    [[nodiscard]] bool toggleOn(int key) const;
+    // The ready-made actions (system.*, sound.*...); tests give it a fake host.
+    [[nodiscard]] BuiltinActions &builtins() { return *m_builtins; }
     // Where the pages are filled from: the installed Steam games, the play data of all games, and the
     // menu applications of a category (the tests replace it; the default reads this machine).
     using Sources = std::function<ArrangeSources(const QString &menuCategory)>;
@@ -126,6 +140,8 @@ Q_SIGNALS:
     // The validation countdown of the wallpaper choice: seconds left (N .. 1), then 0 when it
     // is over or the mode is left. The screen shows it.
     void wallpaperCountdown(int secondsLeft);
+    // A few words after a ready-made action: "Volume 40%", "Dark mode", or why it failed.
+    void actionMessage(const QString &text, bool ok);
     // The dial in wallpaper mode turned: `steps` wallpapers forward (negative: back).
     void wallpaperStep(int steps);
     // Theme mode was entered or left.
@@ -148,6 +164,15 @@ private:
     void onDialRotated(int dial, int steps);
     void onDialPressed(int dial);
     void perform(const Action &action, int times = 1);
+    void performKey(int key, const Action &action); // a toggle remembers its state per page and key
+    void runSteps(const std::vector<Action> &steps, const std::vector<int> &delays, std::size_t from, quint64 generation);
+    void flipToggle(const QString &id, const Action &toggle);
+    void readToggleStatus(const QString &id, const QString &command);
+    void pollToggles();
+    [[nodiscard]] QString toggleId(int key) const;
+    static bool runCommandLine(const QString &command, bool terminal);
+    static void readStatusCommand(const QString &command, std::function<void(int)> done);
+    static QString shellQuote(const QString &text);
     void launchApp(const QString &desktop);
     // The application behind a reference of the pages file (looked up once).
     [[nodiscard]] DesktopApp appFor(const QString &desktop);
@@ -239,6 +264,17 @@ private:
 #endif
     AppLauncher m_launcher;
     SteamLauncher m_steamLauncher;
+    Opener m_opener;
+    CommandRunner m_commandRunner;
+    StatusReader m_statusReader;
+    QHash<QString, bool> m_toggles;      // "page/key" (or "dial/n") -> on
+    QString m_toggleContext;             // the toggle id for the action being performed
+    quint64 m_generation = 0;            // a new pages file stops the steps still waiting
+    BuiltinActions *m_builtins = nullptr; // owned (a child)
+    void onBuiltinDone(const QString &id, const BuiltinResult &result);
+    QTimer m_togglePoll;                 // re-reads the status commands of the shown toggles
+    std::array<quint64, galleon::protocol::KeyCount> m_longPressGen{};
+    std::array<bool, galleon::protocol::KeyCount> m_longPressFired{};
     Sources m_sourceProvider;
     QHash<QString, DesktopApp> m_apps; // looked-up references, a handful: cleared on every reload
     QHash<QString, bool> m_warned;     // what was already said once in the log

@@ -173,6 +173,21 @@ class TestScreenController : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void aMessageIsDrawnOverThePicture()
+    {
+        QImage frame(720, 384, QImage::Format_RGB32);
+        frame.fill(Qt::blue);
+        QCOMPARE(ScreenController::withMessage(frame, {}, true), frame);
+        const QImage words = ScreenController::withMessage(frame, QStringLiteral("Dark mode"), true);
+        QVERIFY(words != frame);
+        QVERIFY(QColor(words.pixel(360, 220)).blue() < 100); // the dark panel
+        QCOMPARE(QColor(words.pixel(10, 10)), QColor(Qt::blue));    // the rest is untouched
+        const QImage level = ScreenController::withMessage(frame, QStringLiteral("Volume 50%"), true);
+        // The bar: white up to the middle, grey after it.
+        QVERIFY(QColor(level.pixel(250, 290)).lightness() > 200);
+        QVERIFY(QColor(level.pixel(480, 290)).lightness() < 100);
+    }
+
 #ifdef Q_OS_WIN
     void initialOpenWaitsForTheEventLoop()
     {

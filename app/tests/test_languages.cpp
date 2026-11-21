@@ -29,6 +29,7 @@ private Q_SLOTS:
         QCOMPARE(bosun::LanguageSettings::systemLanguage({"de-DE"}), QStringLiteral("de"));
         QCOMPARE(bosun::LanguageSettings::systemLanguage({"es-MX"}), QStringLiteral("es"));
         QCOMPARE(bosun::LanguageSettings::systemLanguage({"ja-JP"}), QStringLiteral("en"));
+        QCOMPARE(bosun::LanguageSettings::systemLanguage({"vi-VN"}), QStringLiteral("vi"));
     }
     void preferenceSurvivesRestartAndRejectsUnknownLanguages()
     {
@@ -106,7 +107,7 @@ private Q_SLOTS:
             result.sort();
             return result;
         };
-        for (const QString &language : {QStringLiteral("fr"), QStringLiteral("de"), QStringLiteral("es")}) {
+        for (const QString &language : {QStringLiteral("fr"), QStringLiteral("de"), QStringLiteral("es"), QStringLiteral("vi")}) {
             QFile file(QStringLiteral(":/bosun/translations/%1.json").arg(language));
             QVERIFY(file.open(QIODevice::ReadOnly));
             const auto catalog = QJsonDocument::fromJson(file.readAll()).object();

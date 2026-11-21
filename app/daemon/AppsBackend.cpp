@@ -132,6 +132,24 @@ void AppsBackend::reload()
             case ActionType::Text:
                 kind = QStringLiteral("text");
                 break;
+            case ActionType::Url:
+                kind = QStringLiteral("url");
+                break;
+            case ActionType::File:
+                kind = QStringLiteral("file");
+                break;
+            case ActionType::Command:
+                kind = QStringLiteral("command");
+                break;
+            case ActionType::Multi:
+                kind = QStringLiteral("multi");
+                break;
+            case ActionType::Toggle:
+                kind = QStringLiteral("toggle");
+                break;
+            case ActionType::Builtin:
+                kind = key->action.builtin;
+                break;
             case ActionType::WallpaperMode:
                 kind = QStringLiteral("wallpaper-mode");
                 break;

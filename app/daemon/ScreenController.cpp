@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "ScreenController.h"
+#include <QFontMetricsF>
+#include <QRegularExpression>
+#include <QPainter>
 
 #include "ScreenRenderer.h"
 
@@ -84,6 +87,12 @@ ScreenController::ScreenController(galleon::StreamDeck *deck,
                 draw();
         });
     }
+    m_messageTimer.setSingleShot(true);
+    m_messageTimer.setInterval(1500);
+    connect(&m_messageTimer, &QTimer::timeout, this, [this] {
+        m_message.clear();
+        draw();
+    });
     m_holdTimer.setSingleShot(true);
     m_holdTimer.setInterval(WallpaperHoldMs);
     connect(&m_holdTimer, &QTimer::timeout, this, [this] {
@@ -451,8 +460,67 @@ void ScreenController::onNowPlayingChanged()
         draw(); // the track, its timeline, or the return to the wallpaper
 }
 
-bool ScreenController::sendScreen(const QImage &frame)
+void ScreenController::showMessage(const QString &text, bool ok)
 {
+    m_message = text.trimmed().left(60);
+    m_messageOk = ok;
+    if (m_message.isEmpty())
+        return;
+    m_messageTimer.start();
+    draw();
+}
+
+QImage ScreenController::withMessage(const QImage &frame, const QString &text, bool ok)
+{
+    if (text.isEmpty() || frame.isNull())
+        return frame;
+    QImage image = frame.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
+    const qreal unit = image.height() / 384.0;
+    static const QRegularExpression level(QStringLiteral("^(.*?)\\s*(\\d{1,3})\\s*%$"));
+    const auto match = level.match(text);
+    const QRectF panel(image.width() * 0.15, image.height() - 170 * unit, image.width() * 0.70, 140 * unit);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 215));
+    painter.drawRoundedRect(panel, 22 * unit, 22 * unit);
+    QFont font = painter.font();
+    font.setBold(true);
+    if (match.hasMatch()) {
+        const int percent = std::clamp(match.captured(2).toInt(), 0, 100);
+        font.setPixelSize(qRound(34 * unit));
+        painter.setFont(font);
+        painter.setPen(QColor(0x8e, 0x8e, 0x93));
+        painter.drawText(QRectF(panel.left(), panel.top() + 14 * unit, panel.width(), 46 * unit), Qt::AlignCenter,
+                         QStringLiteral("%1 %2%").arg(match.captured(1)).arg(percent).trimmed());
+        const QRectF track(panel.left() + 32 * unit, panel.top() + 76 * unit, panel.width() - 64 * unit, 36 * unit);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(0x3a, 0x3a, 0x3c));
+        painter.drawRoundedRect(track, track.height() / 2, track.height() / 2);
+        if (percent > 0) {
+            QRectF filled = track;
+            filled.setWidth(std::max(track.height(), track.width() * percent / 100.0));
+            painter.setBrush(Qt::white);
+            painter.drawRoundedRect(filled, track.height() / 2, track.height() / 2);
+        }
+    } else {
+        int pixels = 56;
+        font.setPixelSize(qRound(pixels * unit));
+        while (pixels > 18 && QFontMetricsF(font).horizontalAdvance(text) > panel.width() - 40 * unit) {
+            pixels -= 4;
+            font.setPixelSize(qRound(pixels * unit));
+        }
+        painter.setFont(font);
+        painter.setPen(ok ? QColor(Qt::white) : QColor(0xff, 0x6b, 0x6b));
+        painter.drawText(panel, Qt::AlignCenter, text);
+    }
+    painter.end();
+    return image;
+}
+
+bool ScreenController::sendScreen(const QImage &plain)
+{
+    const QImage frame = withMessage(plain, m_message, m_messageOk);
     QElapsedTimer took;
     took.start();
     const bool sent = m_deck->setScreenImage(frame, m_choosingWallpaper ? PreviewQuality : NormalQuality);

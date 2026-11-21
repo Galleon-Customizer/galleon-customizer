@@ -418,6 +418,77 @@ private Q_SLOTS:
     }
 
 
+    void theNewKindsOfActionAreWrittenAndChecked()
+    {
+        Environment const env;
+        QVERIFY(writeFile(env.pages(), themesFile()));
+        KeySpec combo = spec("combo");
+        combo.keys = " super+shift+s ";
+        QVERIFY(PagesEditor::setKey(env.pages(), "music", 0, combo).ok);
+        KeySpec typed = spec("text");
+        typed.text = "hello";
+        typed.enter = true;
+        QVERIFY(PagesEditor::setKey(env.pages(), "music", 1, typed).ok);
+        KeySpec web = spec("url");
+        web.url = "https://example.org";
+        QVERIFY(PagesEditor::setKey(env.pages(), "music", 2, web).ok);
+        KeySpec folder = spec("file");
+        folder.url = "~/Documents";
+        QVERIFY(PagesEditor::setKey(env.pages(), "music", 3, folder).ok);
+        KeySpec run = spec("command");
+        run.shell = "htop";
+        run.terminal = true;
+        QVERIFY(PagesEditor::setKey(env.pages(), "music", 4, run).ok);
+        KeySpec ready = spec("sound.set_volume");
+        ready.options = QJsonObject{{"percent", 30}};
+        QVERIFY(PagesEditor::setKey(env.pages(), "music", 5, ready).ok);
+        KeySpec wrong = spec("sound.set_volume");
+        wrong.options = QJsonObject{{"percent", 300}};
+        QVERIFY(!PagesEditor::setKey(env.pages(), "music", 6, wrong).ok);
+        KeySpec badUrl = spec("url");
+        badUrl.url = "file:///etc";
+        QVERIFY(!PagesEditor::setKey(env.pages(), "music", 6, badUrl).ok);
+
+        const Page music = configOf(env.pages()).pages.value("music");
+        QCOMPARE(required(music.keys[0]).action.keys, QStringLiteral("super+shift+s"));
+        QVERIFY(required(music.keys[1]).action.enter);
+        QCOMPARE(required(music.keys[2]).action.url, QStringLiteral("https://example.org"));
+        QCOMPARE(int(required(music.keys[3]).action.type), int(ActionType::File));
+        QVERIFY(required(music.keys[4]).action.terminal);
+        QCOMPARE(required(music.keys[5]).action.builtin, QStringLiteral("sound.set_volume"));
+        QCOMPARE(required(music.keys[5]).action.options.value("percent").toInt(), 30);
+        QVERIFY(!music.keys[6].has_value());
+    }
+
+    void keepingAKeyKeepsItsActionLongPressAndLook()
+    {
+        Environment const env;
+        QVERIFY(writeFile(env.pages(), R"({"version": 1, "home": "main", "pages": {"main": {"keys": [
+            {"key": 0, "label": "Mic", "look": {"background": "#112233"},
+             "long_press": {"type": "system.lock"},
+             "action": {"type": "toggle", "on": {"type": "sound.mute_input"}, "off": {"type": "sound.mute_input"}}}]}}})"));
+        KeySpec keep = spec("keep");
+        keep.label = "Micro";
+        QVERIFY(PagesEditor::setKey(env.pages(), "main", 0, keep).ok);
+        const KeyConfig key = required(configOf(env.pages()).pages.value("main").keys[0]);
+        QCOMPARE(key.label, QStringLiteral("Micro"));
+        QCOMPARE(int(key.action.type), int(ActionType::Toggle));
+        QVERIFY(key.longPress.has_value());
+        QCOMPARE(key.look.background, QStringLiteral("#112233"));
+        QVERIFY(!PagesEditor::setKey(env.pages(), "main", 1, keep).ok); // nothing to keep there
+    }
+
+    void aProfileReplacesTheWholeFileOnlyWhenItIsValid()
+    {
+        Environment const env;
+        QVERIFY(writeFile(env.pages(), themesFile()));
+        QVERIFY(!PagesEditor::replaceAll(env.pages(), "{\"version\": 1}").ok);
+        QCOMPARE(readFile(env.pages()), themesFile());
+        QVERIFY(PagesEditor::replaceAll(env.pages(), saverFile()).ok);
+        QVERIFY(configOf(env.pages()).screensaver.videos.size() == 3);
+        QCOMPARE(readFile(env.pages() + ".bak"), themesFile());
+    }
+
     void aKeyCanDoAnyOfTheKindsOfAction()
     {
         Environment const env;

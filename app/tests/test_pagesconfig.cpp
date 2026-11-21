@@ -447,6 +447,80 @@ private Q_SLOTS:
         QVERIFY(!withKey({{"type", "key"}, {"key", "kp7"}, {"code", 71}}).config.has_value());
     }
 
+    // Ported from the Python app: url, file, command, multi, toggle, long press.
+    void portedActionsAreChecked()
+    {
+        const auto withKey = [](const QJsonObject &key) {
+            return parseEdited([&](QJsonObject &object) {
+                QJsonObject pages = object.value("pages").toObject();
+                QJsonObject main = pages.value("main").toObject();
+                QJsonArray keys = main.value("keys").toArray();
+                keys.append(key);
+                main.insert("keys", keys);
+                pages.insert("main", main);
+                object.insert("pages", pages);
+            });
+        };
+        const auto withAction = [&](const QJsonObject &action) { return withKey(QJsonObject{{"key", 4}, {"action", action}}); };
+        const QJsonObject run{{"type", "command"}, {"command", "true"}};
+        QVERIFY(withAction({{"type", "url"}, {"url", "https://example.org"}}).config.has_value());
+        QVERIFY(withAction({{"type", "url"}, {"url", "mailto:a@example.org"}}).config.has_value());
+        QVERIFY(!withAction({{"type", "url"}, {"url", "file:///etc/passwd"}}).config.has_value());
+        QVERIFY(!withAction({{"type", "url"}, {"url", "javascript:alert(1)"}}).config.has_value());
+        QVERIFY(withAction({{"type", "file"}, {"path", "~/Documents"}}).config.has_value());
+        QVERIFY(!withAction({{"type", "file"}, {"path", "relative/file"}}).config.has_value());
+        QVERIFY(withAction(run).config.has_value());
+        QVERIFY(!withAction({{"type", "command"}, {"command", "  "}}).config.has_value());
+        QVERIFY(!withAction({{"type", "command"}, {"command", "x"}, {"terminal", "yes"}}).config.has_value());
+
+        const auto multi = withAction({{"type", "multi"}, {"steps", QJsonArray{QJsonObject{{"action", run}, {"delay_ms", 100}}}}});
+        QVERIFY2(multi.config.has_value(), qPrintable(multi.errors.join('\n')));
+        QVERIFY(!withAction({{"type", "multi"}, {"steps", QJsonArray{}}}).config.has_value());
+        QVERIFY(!withAction({{"type", "multi"}, {"steps", QJsonArray{QJsonObject{{"action", run}, {"delay_ms", 60001}}}}}).config.has_value());
+        QVERIFY(!withAction({{"type", "multi"}, {"steps", QJsonArray{QJsonObject{{"action", QJsonObject{{"type", "page"}, {"page", "nowhere"}}}}}}}).config.has_value());
+        const QJsonObject nested{{"type", "multi"}, {"steps", QJsonArray{QJsonObject{{"action", run}}}}};
+        QVERIFY(!withAction({{"type", "multi"}, {"steps", QJsonArray{QJsonObject{{"action", nested}}}}}).config.has_value());
+
+        QVERIFY(withAction({{"type", "toggle"}, {"on", run}, {"off", run}, {"status_command", "true"}}).config.has_value());
+        QVERIFY(!withAction({{"type", "toggle"}, {"on", run}}).config.has_value());
+        QVERIFY(withKey({{"key", 4}, {"icon", QJsonObject{{"on", "a.png"}, {"off", "b.png"}}},
+                         {"action", QJsonObject{{"type", "toggle"}, {"on", run}, {"off", run}}}}).config.has_value());
+
+        const auto held = withKey({{"key", 4}, {"action", run}, {"long_press", QJsonObject{{"type", "page"}, {"page", "main"}}}});
+        QVERIFY2(held.config.has_value(), qPrintable(held.errors.join('\n')));
+        QVERIFY(required(held.config).pages.value("main").keys.at(4)->longPress.has_value());
+        QVERIFY(!withKey({{"key", 4}, {"action", run}, {"long_press", "page"}}).config.has_value());
+
+        // Ready-made actions: their name is the type, their options sit beside it.
+        const auto lock = withAction({{"type", "system.lock"}});
+        QVERIFY2(lock.config.has_value(), qPrintable(lock.errors.join('\n')));
+        const Action parsed = required(required(lock.config).pages.value("main").keys.at(4)).action;
+        QCOMPARE(int(parsed.type), int(ActionType::Builtin));
+        QCOMPARE(parsed.builtin, QStringLiteral("system.lock"));
+        QVERIFY(withAction({{"type", "sound.set_volume"}, {"percent", 30}}).config.has_value());
+        QVERIFY(!withAction({{"type", "sound.set_volume"}, {"percent", 300}}).config.has_value());
+        QVERIFY(!withAction({{"type", "system.lock"}, {"now", true}}).config.has_value());
+        QVERIFY(!withAction({{"type", "system.reboot"}}).config.has_value());
+        const auto dials = [](const QJsonObject &turn) {
+            return parseEdited([&](QJsonObject &object) { object.insert("dials", QJsonObject{{"0", QJsonObject{{"turn", turn}}}}); });
+        };
+        QVERIFY(dials({{"type", "sound.volume"}, {"step", 2}}).config.has_value());
+        QVERIFY(!dials({{"type", "system.lock"}}).config.has_value());
+
+        const auto looked = withKey({{"key", 4}, {"label", "A"}, {"look", QJsonObject{{"background", "#112233"}, {"title_color", "#ffffff"},
+                                     {"font_size", 20}, {"title_position", "top"}, {"show_title", false}}}});
+        QVERIFY2(looked.config.has_value(), qPrintable(looked.errors.join('\n')));
+        const KeyLook look = required(required(looked.config).pages.value("main").keys.at(4)).look;
+        QCOMPARE(look.background, QStringLiteral("#112233"));
+        QCOMPARE(look.titleColor, QStringLiteral("#FFFFFF"));
+        QCOMPARE(look.fontSize, 20);
+        QCOMPARE(int(look.titlePosition), int(TitlePosition::Top));
+        QVERIFY(!look.showTitle);
+        QVERIFY(!withKey({{"key", 4}, {"look", QJsonObject{{"background", "red"}}}}).config.has_value());
+        QVERIFY(!withKey({{"key", 4}, {"look", QJsonObject{{"font_size", 100}}}}).config.has_value());
+        QVERIFY(!withKey({{"key", 4}, {"look", QJsonObject{{"emoji", "x"}}}}).config.has_value());
+    }
+
     // Local patch: combinations and typed text.
     void comboAndTextActions()
     {

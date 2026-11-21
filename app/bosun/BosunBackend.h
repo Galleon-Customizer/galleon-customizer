@@ -45,6 +45,10 @@ class BosunBackend : public QObject
     // What a key can do: [{id, label}] for media, the names of the keys of the keypad.
     Q_PROPERTY(QVariantList mediaCommands READ mediaCommands NOTIFY changed)
     Q_PROPERTY(QStringList keypadKeys READ keypadKeys CONSTANT)
+    // The ready-made actions (system.*, sound.*, clipboard.*, capture.*): id, label, group, options.
+    Q_PROPERTY(QVariantList builtinActions READ builtinActions NOTIFY changed)
+    // The saved profiles: copies of the whole pages file, by name.
+    Q_PROPERTY(QStringList profiles READ profiles NOTIFY changed)
     // Goes up at each reading, to make the window ask for the pictures again.
     Q_PROPERTY(int revision READ revision NOTIFY changed)
     // The screensaver of the file, with what is known of each video (see screensaver()).
@@ -83,6 +87,11 @@ public:
     Q_INVOKABLE [[nodiscard]] QStringList subPagesOf(const QString &page) const;
     [[nodiscard]] static QVariantList mediaCommands();
     [[nodiscard]] static QStringList keypadKeys();
+    [[nodiscard]] static QVariantList builtinActions();
+    [[nodiscard]] QStringList profiles() const;
+    Q_INVOKABLE [[nodiscard]] QString saveProfile(const QString &name);
+    Q_INVOKABLE [[nodiscard]] QString loadProfile(const QString &name);
+    Q_INVOKABLE [[nodiscard]] QString removeProfile(const QString &name);
     // The installed applications, [{name, id, icon}] by name (read from the menu on the first call).
     Q_INVOKABLE [[nodiscard]] QVariantList installedApps();
     [[nodiscard]] int revision() const { return m_revision; }

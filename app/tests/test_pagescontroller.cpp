@@ -252,6 +252,171 @@ class TestPagesController : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    // Ported from the Python app: open, run, several actions, toggle, long press.
+    void urlFileAndCommandKeys()
+    {
+        DataFolders const data;
+        const QString file = data.dir.filePath("pages.json");
+        QVERIFY(writeFile(file, pagesFile({{"main", page({
+            keyJson(0, "Web", QJsonObject{{"type", "url"}, {"url", "https://example.org/"}}),
+            keyJson(1, "Notes", QJsonObject{{"type", "file"}, {"path", "~/notes.txt"}}),
+            keyJson(2, "Run", QJsonObject{{"type", "command"}, {"command", "echo hi"}, {"terminal", true}}),
+        })}})));
+        Fixture f;
+        QList<QUrl> opened;
+        QStringList ran;
+        bool inTerminal = false;
+        f.controller->setOpener([&opened](const QUrl &url) { opened << url; return true; });
+        f.controller->setCommandRunner([&](const QString &command, bool terminal) { ran << command; inTerminal = terminal; return true; });
+        f.controller->loadFile(file);
+        f.pressKey(0, true); f.pressKey(0, false);
+        f.pressKey(1, true); f.pressKey(1, false);
+        f.pressKey(2, true); f.pressKey(2, false);
+        QCOMPARE(opened.size(), 2);
+        QCOMPARE(opened.at(0), QUrl("https://example.org/"));
+        QCOMPARE(opened.at(1), QUrl::fromLocalFile(QDir::homePath() + "/notes.txt"));
+        QCOMPARE(ran, QStringList{"echo hi"});
+        QVERIFY(inTerminal);
+    }
+
+    void aMultiActionRunsItsStepsInOrderWithTheirDelays()
+    {
+        DataFolders const data;
+        const QString file = data.dir.filePath("pages.json");
+        const QJsonArray steps{
+            QJsonObject{{"action", QJsonObject{{"type", "command"}, {"command", "one"}}}},
+            QJsonObject{{"action", QJsonObject{{"type", "command"}, {"command", "two"}}}, {"delay_ms", 300}},
+            QJsonObject{{"action", QJsonObject{{"type", "command"}, {"command", "three"}}}},
+        };
+        QVERIFY(writeFile(file, pagesFile({{"main", page({keyJson(4, "All", QJsonObject{{"type", "multi"}, {"steps", steps}})})}})));
+        Fixture f;
+        QStringList ran;
+        f.controller->setCommandRunner([&ran](const QString &command, bool) { ran << command; return true; });
+        f.controller->loadFile(file);
+        f.pressKey(4, true);
+        QCOMPARE(ran, QStringList{"one"}); // the second waits 300 ms
+        QTRY_COMPARE_WITH_TIMEOUT(ran, (QStringList{"one", "two", "three"}), 2000);
+        f.pressKey(4, false);
+        QCOMPARE(ran.size(), 3);
+    }
+
+    void aToggleAlternatesAndFollowsItsStatusCommand()
+    {
+        DataFolders const data;
+        const QString file = data.dir.filePath("pages.json");
+        const QJsonObject toggle{{"type", "toggle"},
+                                 {"on", QJsonObject{{"type", "command"}, {"command", "turn-on"}}},
+                                 {"off", QJsonObject{{"type", "command"}, {"command", "turn-off"}}}};
+        QJsonObject watched = toggle;
+        watched.insert("status_command", "is-on");
+        QVERIFY(writeFile(file, pagesFile({{"main", page({keyJson(0, "T", toggle), keyJson(1, "W", watched)})}})));
+        Fixture f;
+        QStringList ran;
+        int reported = 0;
+        f.controller->setCommandRunner([&ran](const QString &command, bool) { ran << command; return true; });
+        f.controller->setStatusReader([&reported](const QString &, const std::function<void(int)> &done) { done(reported); });
+        f.controller->loadFile(file);
+
+        QVERIFY(!f.controller->toggleOn(0));
+        f.pressKey(0, true); f.pressKey(0, false);
+        QVERIFY(f.controller->toggleOn(0));
+        f.pressKey(0, true); f.pressKey(0, false);
+        QVERIFY(!f.controller->toggleOn(0));
+        QCOMPARE(ran, (QStringList{"turn-on", "turn-off"}));
+
+        // The status command has the last word: it says "off" after "on" was asked.
+        reported = 0;
+        f.pressKey(1, true); f.pressKey(1, false);
+        QCOMPARE(ran.last(), QStringLiteral("turn-on"));
+        QTRY_VERIFY_WITH_TIMEOUT(!f.controller->toggleOn(1), 2000);
+    }
+
+    void aLongPressDoesTheOtherActionAndAShortOneOnRelease()
+    {
+        DataFolders const data;
+        const QString file = data.dir.filePath("pages.json");
+        QJsonObject key = keyJson(3, "Hold", QJsonObject{{"type", "command"}, {"command", "short"}});
+        key.insert("long_press", QJsonObject{{"type", "command"}, {"command", "long"}});
+        QVERIFY(writeFile(file, pagesFile({{"main", page({key})}})));
+        Fixture f;
+        QStringList ran;
+        f.controller->setCommandRunner([&ran](const QString &command, bool) { ran << command; return true; });
+        f.controller->loadFile(file);
+
+        f.pressKey(3, true);
+        QVERIFY(ran.isEmpty()); // nothing yet: it may become a long press
+        f.pressKey(3, false);
+        QCOMPARE(ran, QStringList{"short"});
+
+        f.pressKey(3, true);
+        QTest::qWait(LongPressMs + 200);
+        QCOMPARE(ran, (QStringList{"short", "long"}));
+        f.pressKey(3, false);
+        QCOMPARE(ran, (QStringList{"short", "long"})); // the release after a long press does nothing
+    }
+
+    void aReadyMadeActionRunsAndItsKeyShowsTheState()
+    {
+        DataFolders const data;
+        const QString file = data.dir.filePath("pages.json");
+        QVERIFY(writeFile(file, pagesFile({{"main", page({
+            keyJson(0, "Dark", QJsonObject{{"type", "system.dark_mode"}}),
+            keyJson(1, "Find", QJsonObject{{"type", "clipboard.search"}}),
+        })}})));
+        Fixture f;
+        QStringList ran;
+        QList<QUrl> opened;
+        bool dark = false;
+        BuiltinActions::Host host;
+        host.desktop = QStringLiteral("gnome");
+        host.wayland = true;
+        host.which = [](const QString &) { return true; };
+        host.run = [&](const QStringList &argv, const QByteArray &, int, QByteArray *out) {
+            ran << argv.join(' ');
+            if (argv.value(1) == QLatin1String("get") && argv.value(3) == QLatin1String("color-scheme") && out)
+                *out = dark ? "'prefer-dark'" : "'default'";
+            if (argv.value(1) == QLatin1String("set") && argv.value(3) == QLatin1String("color-scheme"))
+                dark = argv.value(4) == QLatin1String("prefer-dark");
+            if (argv.value(0) == QLatin1String("wl-paste") && out)
+                *out = "galleon";
+            return 0;
+        };
+        host.spawn = [](const QStringList &) { return true; };
+        host.dbus = [](const QString &, const QString &, const QString &, const QString &, const QVariantList &, QVariant *) { return true; };
+        f.controller->builtins().setHost(host);
+        f.controller->builtins().setSynchronous(true);
+        f.controller->setOpener([&opened](const QUrl &url) { opened << url; return true; });
+        QStringList messages;
+        connect(f.controller.get(), &PagesController::actionMessage, this, [&messages](const QString &text, bool) { messages << text; });
+        f.controller->loadFile(file);
+
+        QVERIFY(!f.controller->toggleOn(0));
+        f.pressKey(0, true); f.pressKey(0, false);
+        QVERIFY(dark);
+        QVERIFY(f.controller->toggleOn(0));
+        QCOMPARE(messages, QStringList{"Dark mode"});
+        f.pressKey(0, true); f.pressKey(0, false);
+        QVERIFY(!dark);
+        QVERIFY(!f.controller->toggleOn(0));
+
+        f.pressKey(1, true); f.pressKey(1, false);
+        QCOMPARE(opened, QList<QUrl>{QUrl("https://www.google.com/search?q=galleon")});
+    }
+
+    void keysOfAnUntrustedPagesFileRunNothing()
+    {
+        DataFolders const data;
+        const QString file = data.dir.filePath("pages.json");
+        QVERIFY(writeFile(file, pagesFile({{"main", page({keyJson(0, "Run", QJsonObject{{"type", "command"}, {"command", "x"}})})}})));
+        QFile::setPermissions(file, QFile::ReadOwner | QFile::WriteOwner | QFile::ReadOther | QFile::WriteOther);
+        Fixture f;
+        int ran = 0;
+        f.controller->setCommandRunner([&ran](const QString &, bool) { ++ran; return true; });
+        f.controller->loadFile(file);
+        f.pressKey(0, true); f.pressKey(0, false);
+        QCOMPARE(ran, 0);
+    }
+
     void gamingPadRoutesSupportedButtonsAndLeavesUserPagesIntact()
     {
         const QTemporaryDir dir;

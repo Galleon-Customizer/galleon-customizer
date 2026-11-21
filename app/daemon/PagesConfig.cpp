@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "PagesConfig.h"
+#include "BuiltinActions.h"
 
 #include "DesktopEntries.h"
 #include "KeyInjector.h"
 
+#include <QUrl>
+#include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -73,6 +76,7 @@ struct Parser
 {
     QStringList errors;
     QSet<QString> referencedPages; // checked once all pages are known
+    int m_composeDepth = 0; // multi and toggle do not nest
 
     void error(const QString &path, const QString &message) { errors.append(path + QStringLiteral(": ") + message); }
 
@@ -139,8 +143,10 @@ struct Parser
             return;
         }
         const QJsonObject states = value.toObject();
-        rejectUnknown(states, {QStringLiteral("playing"), QStringLiteral("paused"), QStringLiteral("stopped")}, path);
-        for (const QString &state : {QStringLiteral("playing"), QStringLiteral("paused"), QStringLiteral("stopped")}) {
+        const QStringList known{QStringLiteral("playing"), QStringLiteral("paused"), QStringLiteral("stopped"),
+                                QStringLiteral("on"), QStringLiteral("off")};
+        rejectUnknown(states, known, path);
+        for (const QString &state : known) {
             if (!states.contains(state))
                 continue;
             QString name;
@@ -238,6 +244,111 @@ struct Parser
             }
             return;
         }
+        if (type == QLatin1String("url")) {
+            rejectUnknown(object, {QStringLiteral("type"), QStringLiteral("url")}, path);
+            if (turnAction)
+                error(path, QStringLiteral("a dial turn needs a media volume or seek action"));
+            QString address;
+            if (text(object.value(QStringLiteral("url")), path + QStringLiteral(".url"), 2000, address)) {
+                const QUrl url(address, QUrl::StrictMode);
+                const QString scheme = url.scheme();
+                if (!url.isValid() || (scheme != QLatin1String("http") && scheme != QLatin1String("https") && scheme != QLatin1String("mailto"))) {
+                    error(path + QStringLiteral(".url"), QStringLiteral("must be an http, https or mailto address"));
+                } else {
+                    out.type = ActionType::Url;
+                    out.url = address;
+                }
+            }
+            return;
+        }
+        if (type == QLatin1String("file")) {
+            rejectUnknown(object, {QStringLiteral("type"), QStringLiteral("path")}, path);
+            if (turnAction)
+                error(path, QStringLiteral("a dial turn needs a media volume or seek action"));
+            QString file;
+            if (text(object.value(QStringLiteral("path")), path + QStringLiteral(".path"), 1024, file)) {
+                if (!(file.startsWith(QLatin1Char('/')) || file.startsWith(QLatin1String("~/")) || QDir::isAbsolutePath(file))) {
+                    error(path + QStringLiteral(".path"), QStringLiteral("must be an absolute path, or start with ~/"));
+                } else {
+                    out.type = ActionType::File;
+                    out.url = file;
+                }
+            }
+            return;
+        }
+        if (type == QLatin1String("command")) {
+            rejectUnknown(object, {QStringLiteral("type"), QStringLiteral("command"), QStringLiteral("terminal")}, path);
+            if (turnAction)
+                error(path, QStringLiteral("a dial turn needs a media volume or seek action"));
+            const QJsonValue terminal = object.value(QStringLiteral("terminal"));
+            if (!terminal.isUndefined() && !terminal.isBool())
+                error(path + QStringLiteral(".terminal"), QStringLiteral("must be true or false"));
+            QString line;
+            if (text(object.value(QStringLiteral("command")), path + QStringLiteral(".command"), MaxCommandLength, line)) {
+                if (line.trimmed().isEmpty() || line.contains(QChar(0))) {
+                    error(path + QStringLiteral(".command"), QStringLiteral("must not be empty"));
+                } else {
+                    out.type = ActionType::Command;
+                    out.shell = line;
+                    out.terminal = terminal.toBool();
+                }
+            }
+            return;
+        }
+        if (type == QLatin1String("multi") || type == QLatin1String("toggle")) {
+            const bool multi = type == QLatin1String("multi");
+            if (turnAction)
+                error(path, QStringLiteral("a dial turn needs a media volume or seek action"));
+            if (m_composeDepth > 0) {
+                error(path, QStringLiteral("a multi-action or toggle cannot hold another one"));
+                return;
+            }
+            ++m_composeDepth;
+            if (multi) {
+                rejectUnknown(object, {QStringLiteral("type"), QStringLiteral("steps")}, path);
+                const QJsonValue stepsValue = object.value(QStringLiteral("steps"));
+                const QJsonArray steps = stepsValue.toArray();
+                if (!stepsValue.isArray() || steps.isEmpty() || steps.size() > MaxMultiSteps) {
+                    error(path + QStringLiteral(".steps"), QStringLiteral("must be a list of 1 to %1 steps").arg(MaxMultiSteps));
+                } else {
+                    for (qsizetype i = 0; i < steps.size(); ++i) {
+                        const QString spath = QStringLiteral("%1.steps[%2]").arg(path).arg(i);
+                        if (!steps.at(i).isObject()) {
+                            error(spath, QStringLiteral("must be an object with an action"));
+                            continue;
+                        }
+                        const QJsonObject step = steps.at(i).toObject();
+                        rejectUnknown(step, {QStringLiteral("action"), QStringLiteral("delay_ms")}, spath);
+                        int delay = 0;
+                        if (step.contains(QStringLiteral("delay_ms")))
+                            integer(step.value(QStringLiteral("delay_ms")), 0, MaxStepDelayMs, spath + QStringLiteral(".delay_ms"), delay);
+                        Action inner;
+                        action(step.value(QStringLiteral("action")), spath + QStringLiteral(".action"), inner);
+                        out.steps.push_back(inner);
+                        out.delays.push_back(delay);
+                    }
+                    out.type = ActionType::Multi;
+                }
+            } else {
+                rejectUnknown(object, {QStringLiteral("type"), QStringLiteral("on"), QStringLiteral("off"), QStringLiteral("status_command")}, path);
+                Action on;
+                Action off;
+                action(object.value(QStringLiteral("on")), path + QStringLiteral(".on"), on);
+                action(object.value(QStringLiteral("off")), path + QStringLiteral(".off"), off);
+                if (object.contains(QStringLiteral("status_command"))) {
+                    QString status;
+                    if (text(object.value(QStringLiteral("status_command")), path + QStringLiteral(".status_command"), MaxCommandLength, status)) {
+                        if (status.trimmed().isEmpty())
+                            error(path + QStringLiteral(".status_command"), QStringLiteral("must not be empty"));
+                        out.shell = status;
+                    }
+                }
+                out.steps = {on, off};
+                out.type = ActionType::Toggle;
+            }
+            --m_composeDepth;
+            return;
+        }
         if (type == QLatin1String("wallpaper-mode")) {
             rejectUnknown(object, {QStringLiteral("type")}, path);
             if (turnAction)
@@ -279,8 +390,24 @@ struct Parser
             }
             return;
         }
+        if (const BuiltinActions::Spec *spec = BuiltinActions::find(type)) {
+            QJsonObject options = object;
+            options.remove(QStringLiteral("type"));
+            if (turnAction && !spec->turn)
+                error(path, QStringLiteral("a dial turn needs a media volume or seek action"));
+            const QString problem = BuiltinActions::checkOptions(*spec, options);
+            if (!problem.isEmpty()) {
+                error(path, problem);
+                return;
+            }
+            out.type = ActionType::Builtin;
+            out.builtin = type;
+            out.options = options;
+            return;
+        }
         if (type != QLatin1String("media")) {
-            error(path + QStringLiteral(".type"), QStringLiteral("must be one of none, media, page, back, app, theme, wallpaper-mode, key, steam"));
+            error(path + QStringLiteral(".type"), QStringLiteral("must be one of none, media, page, back, app, theme, wallpaper-mode, key, steam, "
+                                                                 "combo, text, url, file, command, multi, toggle, or a ready-made action such as system.lock"));
             return;
         }
 
@@ -317,7 +444,7 @@ struct Parser
         const QJsonObject object = value.toObject();
         rejectUnknown(object,
                       {QStringLiteral("key"), QStringLiteral("label"), QStringLiteral("icon"), QStringLiteral("action"),
-                       QStringLiteral("state_labels")},
+                       QStringLiteral("state_labels"), QStringLiteral("long_press"), QStringLiteral("look")},
                       path);
 
         KeyConfig config;
@@ -347,7 +474,53 @@ struct Parser
                 }
             }
         }
+        if (object.contains(QStringLiteral("long_press"))) {
+            Action held;
+            action(object.value(QStringLiteral("long_press")), path + QStringLiteral(".long_press"), held);
+            config.longPress = held;
+        }
+        if (object.contains(QStringLiteral("look")))
+            look(object.value(QStringLiteral("look")), path + QStringLiteral(".look"), config.look);
         page.keys.at(static_cast<std::size_t>(config.key)) = config;
+    }
+
+    void look(const QJsonValue &value, const QString &path, KeyLook &out)
+    {
+        if (!value.isObject()) {
+            error(path, QStringLiteral("must be an object"));
+            return;
+        }
+        const QJsonObject object = value.toObject();
+        rejectUnknown(object, {QStringLiteral("background"), QStringLiteral("title_color"), QStringLiteral("font_size"),
+                               QStringLiteral("title_position"), QStringLiteral("show_title")}, path);
+        static const QRegularExpression colour(QStringLiteral("^#[0-9A-Fa-f]{6}$"));
+        for (const auto &[key, target] : {std::pair{QStringLiteral("background"), &out.background}, std::pair{QStringLiteral("title_color"), &out.titleColor}}) {
+            if (!object.contains(key))
+                continue;
+            if (!colour.match(object.value(key).toString()).hasMatch())
+                error(path + QLatin1Char('.') + key, QStringLiteral("must be a colour like #RRGGBB"));
+            else
+                *target = object.value(key).toString().toUpper();
+        }
+        if (object.contains(QStringLiteral("font_size")))
+            integer(object.value(QStringLiteral("font_size")), 6, 64, path + QStringLiteral(".font_size"), out.fontSize);
+        if (object.contains(QStringLiteral("title_position"))) {
+            const QString position = object.value(QStringLiteral("title_position")).toString();
+            if (position == QLatin1String("top"))
+                out.titlePosition = TitlePosition::Top;
+            else if (position == QLatin1String("middle"))
+                out.titlePosition = TitlePosition::Middle;
+            else if (position == QLatin1String("bottom"))
+                out.titlePosition = TitlePosition::Bottom;
+            else
+                error(path + QStringLiteral(".title_position"), QStringLiteral("must be top, middle or bottom"));
+        }
+        if (object.contains(QStringLiteral("show_title"))) {
+            if (!object.value(QStringLiteral("show_title")).isBool())
+                error(path + QStringLiteral(".show_title"), QStringLiteral("must be true or false"));
+            else
+                out.showTitle = object.value(QStringLiteral("show_title")).toBool();
+        }
     }
 
     void pages(const QJsonValue &value, PagesConfig &config)
