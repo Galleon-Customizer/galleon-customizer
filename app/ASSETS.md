@@ -28,6 +28,13 @@ and games discovered on the author's desktop. They illustrate the selector and
 are not standalone art assets or endorsements. Keep provenance with the captures;
 third-party icon and trademark rights remain with their respective owners.
 
+The project logo, [`docs/logo.webp`](../docs/logo.webp) at the root of the repository, is a Corsair
+product image of the Galleon 100 SD, used at the owner's request. Corsair and the marks shown on its
+keys belong to their respective owners; their use implies no endorsement. It is used only in the
+README. The app icon, `bosun/icons/galleon-customizer.svg` (the module as laid out on the keyboard: two
+dials, the screen with its clock, volume and limits, and the 12 keys showing the numpad page, drawn for the project), replaces the wheel described above and stays
+GPL-3.0-or-later, like `tools/packaging/windows/assets/galleon-customizer.ico` made from it.
+
 The Claude and Codex logos in [`widgets/logos/`](widgets/logos/) are a further exception. They
 only label the Claude and Codex quota cards on the screen, so the reader knows which service a
 limit belongs to. They come from the AI Quota Stream Deck plugin

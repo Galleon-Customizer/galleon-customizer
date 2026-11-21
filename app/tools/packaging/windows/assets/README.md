@@ -5,7 +5,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Setup artwork
 
-The icon is derived from `bosun/icons/galleon-customizer.svg`, drawn for this project.
+The icon is rendered from `bosun/icons/galleon-customizer.svg`, drawn for this project.
 The editable header and welcome SVGs reuse its wheel, 12 colored keys, charcoal
 background and amber accent. No generated artwork or third-party illustrations
 are used. All these installer graphics retain GPL-3.0-or-later.
@@ -13,7 +13,8 @@ are used. All these installer graphics retain GPL-3.0-or-later.
 Render from the repository root with ImageMagick (and its SVG renderer):
 
 ```sh
-magick -background none bosun/icons/galleon-customizer.svg -define icon:auto-resize=256,128,64,48,32,16 tools/packaging/windows/assets/galleon-customizer.ico
+for s in 16 32 48 64 128 256; do rsvg-convert -w $s -h $s bosun/icons/galleon-customizer.svg -o /tmp/icon-$s.png; done
+magick /tmp/icon-{16,32,48,64,128,256}.png tools/packaging/windows/assets/galleon-customizer.ico
 magick tools/packaging/windows/assets/welcome.svg -alpha off -type TrueColor BMP3:tools/packaging/windows/assets/welcome.bmp
 magick tools/packaging/windows/assets/header.svg -alpha off -type TrueColor BMP3:tools/packaging/windows/assets/header.bmp
 ```
