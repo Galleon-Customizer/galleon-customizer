@@ -81,14 +81,21 @@ BuiltinResult act(FakeSystem &system, const QString &name, const QJsonObject &op
 class TestBuiltinActions : public QObject
 {
     Q_OBJECT
+    QTemporaryDir m_config;
+
 private Q_SLOTS:
-    void initTestCase() { QLocale::setDefault(QLocale(QLocale::English)); }
+    void initTestCase()
+    {
+        QLocale::setDefault(QLocale(QLocale::English));
+        QVERIFY(m_config.isValid());
+        qputenv("XDG_CONFIG_HOME", m_config.path().toUtf8());
+    }
 
     void theWordsFollowTheChosenLanguage()
     {
         QTemporaryDir config;
         qputenv("XDG_CONFIG_HOME", config.path().toUtf8());
-        const auto restore = qScopeGuard([] { qunsetenv("XDG_CONFIG_HOME"); });
+        const auto restore = qScopeGuard([this] { qputenv("XDG_CONFIG_HOME", m_config.path().toUtf8()); });
         FakeSystem system;
         system.installed = {QStringLiteral("wpctl")};
         QCOMPARE(act(system, QStringLiteral("sound.set_volume"), {{"percent", 20}}).message, QStringLiteral("Volume 20%"));
