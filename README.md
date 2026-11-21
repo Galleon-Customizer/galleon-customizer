@@ -7,6 +7,52 @@ by Paul Woisard, renamed and extended (see `app/README.md`). It has two programs
 `galleon-customizerd` (the daemon that drives the module) and `galleon-customizer`
 (the settings window, in the notification area).
 
+## Install on Linux
+
+Tested on Ubuntu 26.04 (GNOME, Wayland). On Debian or Ubuntu:
+
+```bash
+sudo apt update
+```
+
+```bash
+sudo apt install -y git cmake make g++ pkg-config \
+  qt6-base-dev qt6-declarative-dev qt6-websockets-dev libhidapi-dev \
+  qml6-module-qtquick qml6-module-qtquick-window qml6-module-qtqml qml6-module-qtqml-workerscript \
+  flameshot python3-gi gir1.2-gstreamer-1.0 gstreamer1.0-pipewire \
+  gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+  wl-clipboard xclip tesseract-ocr
+```
+
+```bash
+git clone https://github.com/Galleon-Customizer/galleon-customizer.git
+```
+
+```bash
+cd galleon-customizer
+```
+
+```bash
+./install.sh --app --system
+```
+
+`--app` builds the app, runs its tests and installs it in `/usr/local` (asks for sudo).
+`--system` installs the udev rule so your user can open the keyboard (asks for sudo).
+Unplug and plug the keyboard back in once afterwards.
+
+The settings window sits in the notification area. Ubuntu shows it out of the box; on
+other GNOME desktops, install and turn on the AppIndicator extension:
+
+```bash
+sudo apt install -y gnome-shell-extension-appindicator
+```
+
+Check that the daemon runs:
+
+```bash
+systemctl --user status galleon-customizerd
+```
+
 ## Pages
 
 The pages, key pictures and actions of the "Minh Spark" Stream Deck profile from
@@ -15,27 +61,35 @@ actions replaced by their Ubuntu equivalents:
 
 | Page | Keys |
 |---|---|
-| Chụp & Phím tắt (home) | area/full/window screenshot, record area (GNOME recorder) / full screen, OBS (was Game Bar), Super+D, overview (was Win+Tab), lock, Resources (was Task Manager), Files, Ctrl+Shift+T |
-| Phím số | numeric keypad; the middle bottom key opens Ký hiệu |
+| Capture & Shortcuts (home) | area/full/window screenshot, record area (GNOME recorder) / full screen, OBS (was Game Bar), Super+D, overview (was Win+Tab), lock, Resources (was Task Manager), Files, Ctrl+Shift+T |
+| Numpad | numeric keypad; the middle bottom key opens Symbols |
 | Claude & Codex | Claude app, Codex (web), Claude Code / Codex CLI in a terminal, Esc, Shift+Tab, Enter, types `/compact`, `/clear`, `/usage` |
-| Ký hiệu | `& * ( $ % ^ ! @ # )`, Enter; the middle bottom key goes back to Phím số |
+| Symbols | `& * ( $ % ^ ! @ # )`, Enter; the middle bottom key goes back to Numpad |
 | YouTube | open YouTube, theater, full screen, previous/play/next, -10 s, mute, +10 s, slower, captions, faster |
 
 ### Key pictures
 
 Every page as it shows on the module (keys left to right, top to bottom).
 The pictures are in `config/icons/`; these previews are made from them with `config/pages.json`.
+The labels on the key pictures are in Vietnamese, as on the original profile.
 
 <table>
-<tr><th>Chụp &amp; Phím tắt (home)</th><th>Phím số</th><th>Claude &amp; Codex</th><th>Ký hiệu</th><th>YouTube</th></tr>
-<tr><td><img src="docs/pages/chup-phim-tat.png" width="160" alt="Chụp &amp; Phím tắt (home)"></td><td><img src="docs/pages/phim-so.png" width="160" alt="Phím số"></td><td><img src="docs/pages/claude-codex.png" width="160" alt="Claude &amp; Codex"></td><td><img src="docs/pages/ky-hieu.png" width="160" alt="Ký hiệu"></td><td><img src="docs/pages/youtube.png" width="160" alt="YouTube"></td></tr>
+<tr><th>Capture &amp; Shortcuts (home)</th><th>Numpad</th><th>Claude &amp; Codex</th><th>Symbols</th><th>YouTube</th></tr>
+<tr><td><img src="docs/pages/chup-phim-tat.png" width="160" alt="Capture &amp; Shortcuts (home)"></td><td><img src="docs/pages/phim-so.png" width="160" alt="Numpad"></td><td><img src="docs/pages/claude-codex.png" width="160" alt="Claude &amp; Codex"></td><td><img src="docs/pages/ky-hieu.png" width="160" alt="Symbols"></td><td><img src="docs/pages/youtube.png" width="160" alt="YouTube"></td></tr>
 </table>
 
+### Screen
+
+The screen as it runs here: clock, volume (right dial) and the Claude and Codex limits
+left on each account, read from Quota Control. Account names are changed for privacy.
+
+<img src="docs/screen.png" width="720" alt="Screen with clock, volume, and Claude and Codex limits">
+
 Antigravity and Quota keys show their pictures but do nothing (no Linux app).
-The "Phiên AI" page and the AI Quota touch strip need the Windows plugin and are not ported.
+The "AI Sessions" page and the AI Quota touch strip need the Windows plugin and are not ported.
 
 Dials:
-- Left: turn = next/previous page, press = back to "Chụp & Phím tắt".
+- Left: turn = next/previous page, press = back to "Capture & Shortcuts".
 - Right: turn = volume (3 % per step), press = mute.
 
 ## Files
@@ -53,7 +107,7 @@ Dials:
 
 Settings live in `~/.config/galleon-customizer/` (moved once from `~/.config/galleoncore/` by `install.sh`).
 
-## Use
+## Commands
 
 ```sh
 ./install.sh --app      # build, test and install the app (sudo), then the settings
