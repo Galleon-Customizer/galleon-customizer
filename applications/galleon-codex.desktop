@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Codex
+Icon=web-browser
+Exec=xdg-open https://chatgpt.com/codex
+NoDisplay=true
+Terminal=false

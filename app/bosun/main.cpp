@@ -1,0 +1,275 @@
+// SPDX-FileCopyrightText: 2026 Paul Woisard
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include "BosunBackend.h"
+#include "LanguageSettings.h"
+#include "DaemonStatus.h"
+#include "FilePicker.h"
+#include "UpdateChecker.h"
+#include "PackageUpdates.h"
+#include <QDesktopServices>
+#include "Tray.h"
+#include "WallpaperLibrary.h"
+
+#include <AppsBackend.h>
+
+#include <QCommandLineParser>
+#include <QDebug>
+#include <QDir>
+
+#include <QApplication>
+#ifdef Q_OS_WIN
+#include "LocalControl.h"
+#endif
+#include <QIcon>
+#include <QImage>
+#include <QQmlApplicationEngine>
+#include <QQuickWindow>
+#include <QStandardPaths>
+#include <QTimer>
+
+#include <optional>
+#include <memory>
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    QGuiApplication::setApplicationName(QStringLiteral("galleon-customizer"));
+    QGuiApplication::setApplicationVersion(QStringLiteral(PROJECT_VERSION_STRING));
+    QGuiApplication::setApplicationDisplayName(QStringLiteral("Galleon Customizer"));
+    // The desktop file name is what Wayland shows the window under (icon and name); the
+    // built-in icon is for a run from the build tree, before anything is installed.
+    QGuiApplication::setDesktopFileName(QStringLiteral("galleon-customizer"));
+    QGuiApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("galleon-customizer"), QIcon(QStringLiteral(":/bosun/icons/galleon-customizer.svg"))));
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QStringLiteral("Galleon Customizer: settings for the Corsair Galleon 100 SD"));
+    parser.addHelpOption();
+    parser.addVersionOption();
+    const QCommandLineOption pagesOption({QStringLiteral("p"), QStringLiteral("pages")},
+                                         QStringLiteral("Pages file (default: the one of galleon-customizerd)."), QStringLiteral("file"));
+    const QCommandLineOption shotOption(QStringLiteral("screenshot"),
+                                        QStringLiteral("Save a picture of the window to <png> and quit (for checking without a screen)."),
+                                        QStringLiteral("png"));
+    const QCommandLineOption tabOption(QStringLiteral("tab"), QStringLiteral("Open on this tab (0 is the first)."), QStringLiteral("n"));
+    const QCommandLineOption keyOption(QStringLiteral("key"), QStringLiteral("Open with this key of the page selected (0 is the first)."),
+                                       QStringLiteral("n"));
+    const QCommandLineOption inspectOption(QStringLiteral("inspect"),
+                                           QStringLiteral("Open the Screensavers tab with this video file chosen (to be added)."),
+                                           QStringLiteral("file"));
+    const QCommandLineOption heightOption(QStringLiteral("height"), QStringLiteral("Open with a window this high, in pixels."), QStringLiteral("n"));
+    const QCommandLineOption cropOption(QStringLiteral("crop"), QStringLiteral("With --inspect: open the crop window on the video."));
+    const QCommandLineOption pictureOption(QStringLiteral("inspect-picture"),
+                                           QStringLiteral("Open the Wallpapers tab with this picture file chosen (to be added)."), QStringLiteral("file"));
+    const QCommandLineOption minimizedOption(QStringLiteral("minimized"), QStringLiteral("Start in the notification area when available."));
+    const QCommandLineOption simulateUpdateOption(QStringLiteral("simulate-update"),
+        QStringLiteral("Test update notification against version 0.0.0 using the real latest release, without saving update preferences."));
+    const QCommandLineOption oldFirmwareOption(QStringLiteral("old-firmware"),
+        QStringLiteral("Show a clearly labelled old Stream Deck firmware simulation, without changing hardware or saved settings."));
+    parser.addOption(oldFirmwareOption);
+    parser.addOption(simulateUpdateOption);
+    parser.addOption(minimizedOption);
+    parser.addOption(pagesOption);
+    parser.addOption(pictureOption);
+    parser.addOption(cropOption);
+    parser.addOption(heightOption);
+    parser.addOption(inspectOption);
+    parser.addOption(tabOption);
+    parser.addOption(keyOption);
+    parser.addOption(shotOption);
+    parser.process(app);
+
+#ifdef Q_OS_WIN
+    std::unique_ptr<galleond::LocalControl> applicationControl;
+    if (!parser.isSet(shotOption)) {
+        applicationControl = std::make_unique<galleond::LocalControl>();
+        const QString endpoint = galleond::localControlName();
+        if (endpoint.isEmpty() || !applicationControl->listen(endpoint + QStringLiteral("-bosun"))) {
+            qCritical() << "galleon-customizer: another instance is running, or local control is unavailable";
+            return 1;
+        }
+        QObject::connect(applicationControl.get(), &galleond::LocalControl::stopRequested,
+                         &app, [] { QCoreApplication::quit(); });
+    }
+#endif
+
+    const QString pagesFile = parser.isSet(pagesOption)
+                                  ? QDir::current().absoluteFilePath(parser.value(pagesOption))
+                                  : QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+                                        + QStringLiteral("/galleon-customizer/pages.json");
+    const bool preview = parser.isSet(shotOption) || parser.isSet(pagesOption)
+                         || parser.isSet(simulateUpdateOption) || parser.isSet(oldFirmwareOption);
+    // NOLINTNEXTLINE(misc-const-correctness) -- QML writes the language preference through its QObject property.
+    bosun::LanguageSettings languages(preview ? QString() : QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+                                                       + QStringLiteral("/galleon-customizer/bosun.conf"));
+    bosun::BosunBackend backend(pagesFile);
+    if (parser.isSet(oldFirmwareOption))
+        qobject_cast<galleond::HomeWidgets *>(backend.homeWidgets())->simulateOldFirmware();
+    QObject::connect(&languages, &bosun::LanguageSettings::changed, &backend, [&backend] {
+        Q_EMIT backend.changed();
+        auto *recording = qobject_cast<galleond::RecordingController *>(backend.recording());
+        if (recording) Q_EMIT recording->changed();
+    });
+    bosun::DaemonStatus daemon;
+#ifdef Q_OS_WIN
+    if (!parser.isSet(shotOption) && !parser.isSet(pagesOption) && !parser.isSet(simulateUpdateOption) && !parser.isSet(oldFirmwareOption)) {
+        // Let the asynchronous IPC probe finish before starting a missing daemon.
+        QTimer::singleShot(1000, &daemon, [&daemon] {
+            if (const QString error = daemon.start(); !error.isEmpty())
+                qWarning().noquote() << error;
+        });
+    }
+#endif
+#ifdef GALLEON_SOURCE_WALLPAPERS
+    bosun::WallpaperLibrary library(bosun::WallpaperLibrary::defaultPlaces(QStringLiteral(GALLEON_SOURCE_WALLPAPERS))); // and the source tree, when running from the build
+#else
+    bosun::WallpaperLibrary library(bosun::WallpaperLibrary::defaultPlaces());
+#endif
+
+    const auto filePicker = std::make_unique<bosun::FilePicker>();
+    bosun::UpdateChecker updates({QCoreApplication::applicationVersion(), {}, bosun::currentUpdatePlatform(), 15000,
+                                  !QStringLiteral(GALLEON_PACKAGE_FORMAT).isEmpty(), parser.isSet(simulateUpdateOption)});
+    QObject::connect(&languages, &bosun::LanguageSettings::changed, &updates, [&updates] { Q_EMIT updates.changed(); });
+    QObject::connect(&updates, &bosun::UpdateChecker::openUrlRequested, &app, [](const QUrl &url) {
+        if (!QDesktopServices::openUrl(url)) qWarning() << "Could not open update link in the browser";
+    });
+    bosun::PackageUpdates packageUpdates;
+    QObject::connect(&packageUpdates, &bosun::PackageUpdates::detected, &updates, [&updates](bool managed, bool known) {
+        updates.setRepositoryManaged(managed, known);
+        if (known) updates.startAutomaticChecks();
+    });
+    if (!parser.isSet(shotOption) && !parser.isSet(pagesOption) && !parser.isSet(simulateUpdateOption) && !parser.isSet(oldFirmwareOption)) {
+        QTimer::singleShot(5000, &updates, [&updates, &packageUpdates] {
+            if (QStringLiteral(GALLEON_PACKAGE_FORMAT).isEmpty()) updates.startAutomaticChecks();
+            else packageUpdates.start(QStringLiteral(GALLEON_PACKAGE_FORMAT));
+        });
+    }
+    if (parser.isSet(simulateUpdateOption))
+        QTimer::singleShot(0, &updates, &bosun::UpdateChecker::checkNow);
+    QQmlApplicationEngine engine;
+    QObject::connect(&languages, &bosun::LanguageSettings::changed, &engine, &QQmlApplicationEngine::retranslate);
+    engine.addImageProvider(QStringLiteral("tiles"), new bosun::TileProvider(&backend));
+    engine.addImageProvider(QStringLiteral("themeicon"), new galleond::ThemeIconProvider);
+    engine.addImageProvider(QStringLiteral("wallpapers"), new bosun::WallpaperThumbnails(&library));
+    engine.addImageProvider(QStringLiteral("wallpaperpreview"), new bosun::WallpaperPreview(&library));
+    engine.setInitialProperties({{QStringLiteral("startMinimized"), parser.isSet(minimizedOption) && !parser.isSet(simulateUpdateOption) && !parser.isSet(oldFirmwareOption) && !parser.isSet(shotOption) && bosun::Tray::isAvailable()},
+                                 {QStringLiteral("updates"), QVariant::fromValue(&updates)},
+                                 {QStringLiteral("languages"), QVariant::fromValue(&languages)},
+                                 {QStringLiteral("animateTabs"), !parser.isSet(shotOption)},
+                                 {QStringLiteral("updatesOpen"), parser.isSet(simulateUpdateOption)},
+                                 {QStringLiteral("filePicker"), QVariant::fromValue(filePicker.get())},
+                                 {QStringLiteral("backend"), QVariant::fromValue(&backend)},
+                                 {QStringLiteral("daemon"), QVariant::fromValue(&daemon)},
+                                 {QStringLiteral("library"), QVariant::fromValue(&library)}});
+    engine.load(QUrl(QStringLiteral("qrc:/bosun/qml/Bosun.qml")));
+    if (engine.rootObjects().isEmpty())
+        return 1;
+
+    // Where to open, for a picture or for coming back to the same place.
+    QObject *root = engine.rootObjects().constFirst();
+    const auto number = [&parser](const QCommandLineOption &option) -> std::optional<int> {
+        bool ok = false;
+        const int value = parser.value(option).toInt(&ok);
+        return parser.isSet(option) && ok && value >= 0 ? std::optional<int>(value) : std::nullopt;
+    };
+    if (const auto height = number(heightOption))
+        root->setProperty("height", *height);
+    if (parser.isSet(oldFirmwareOption)) {
+        const auto tabs = root->property("tabs").toList();
+        for (qsizetype i = 0; i < tabs.size(); ++i)
+            if (tabs.at(i).toMap().value(QStringLiteral("kind")).toString() == QStringLiteral("keyboard"))
+                root->setProperty("currentTab", i);
+    }
+    if (const auto tab = number(tabOption))
+        root->setProperty("currentTab", *tab);
+    if (const auto key = number(keyOption))
+        root->setProperty("selectedKey", *key);
+
+    if (parser.isSet(inspectOption)) {
+        backend.inspect(QDir::current().absoluteFilePath(parser.value(inspectOption)));
+        root->setProperty("currentTab", root->property("tabs").toList().size() - 1);
+        root->setProperty("cropOpen", parser.isSet(cropOption));
+    }
+
+    if (parser.isSet(pictureOption)) {
+        library.inspect(QDir::current().absoluteFilePath(parser.value(pictureOption)));
+        root->setProperty("currentTab", root->property("tabs").toList().size() - 2); // the Wallpapers tab
+    }
+
+    // The icon in the notification area: closing the window hides it, a click shows it again, and
+    // the menu can quit (and stop galleon-customizerd too). Without a notification area it is an ordinary window.
+    auto *window = qobject_cast<QQuickWindow *>(root);
+    bosun::Tray tray(QGuiApplication::windowIcon());
+    if (!parser.isSet(shotOption)) {
+        QObject::connect(&updates, &bosun::UpdateChecker::updatePanelRequested, &app, [&updates, root, window] {
+            if (!window) return;
+            root->setProperty("updatesOpen", true);
+            if (window->windowState() == Qt::WindowMinimized) window->showNormal();
+            else window->show();
+            window->raise();
+            window->requestActivate();
+            updates.acknowledgePanelShown();
+        });
+        QObject::connect(&updates, &bosun::UpdateChecker::updateNotificationRequested, &tray,
+                         [&tray, &updates](const QString &version) { tray.notifyUpdate(version, updates.simulation()); });
+        QObject::connect(&tray, &bosun::Tray::updateNotificationClicked, &app, [root, window] {
+            root->setProperty("updatesOpen", true);
+            if (window) {
+                window->show();
+                window->raise();
+                window->requestActivate();
+            }
+        });
+    }
+    if (window && !parser.isSet(shotOption) && bosun::Tray::isAvailable()) {
+        QApplication::setQuitOnLastWindowClosed(false);
+        root->setProperty("hideOnClose", true);
+        const auto refresh = [&] { tray.update(window->isVisible(), daemon.running()); };
+        QObject::connect(&languages, &bosun::LanguageSettings::changed, &tray, refresh);
+        QObject::connect(window, &QWindow::visibleChanged, &tray, refresh);
+        QObject::connect(&daemon, &bosun::DaemonStatus::changed, &tray, refresh);
+        QObject::connect(&tray, &bosun::Tray::chosen, &app, [&](bosun::TrayEntry::Action action) {
+            switch (action) {
+            case bosun::TrayEntry::Action::ToggleWindow:
+                if (window->isVisible()) {
+                    window->hide();
+                } else {
+                    window->show();
+                    window->raise();
+                    window->requestActivate();
+                }
+                break;
+            case bosun::TrayEntry::Action::StartDaemon:
+                static_cast<void>(daemon.start());
+                break;
+            case bosun::TrayEntry::Action::QuitAndStop:
+                static_cast<void>(daemon.stop());
+                QApplication::quit();
+                break;
+            case bosun::TrayEntry::Action::Quit:
+                QApplication::quit();
+                break;
+            }
+        });
+        if (parser.isSet(minimizedOption))
+            window->hide();
+        refresh();
+        tray.show();
+    }
+
+    if (parser.isSet(shotOption)) {
+        const QString png = parser.value(shotOption);
+        if (!window) {
+            qCritical() << "galleon-customizer: no preview window";
+            return 1;
+        }
+        // The context cancels the callback if the window is destroyed.
+        QTimer::singleShot(700, window, [window, png] {
+            const bool saved = window->grabWindow().save(png);
+            if (!saved)
+                qCritical().noquote() << "galleon-customizer: cannot save" << png;
+            QGuiApplication::exit(saved ? 0 : 1);
+        });
+    }
+    return QGuiApplication::exec();
+}

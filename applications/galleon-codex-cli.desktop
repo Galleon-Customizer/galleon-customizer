@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Codex CLI
+Icon=utilities-terminal
+Exec=ptyxis --new-window --title "Codex CLI" -x "bash -lc codex"
+NoDisplay=true
+Terminal=false

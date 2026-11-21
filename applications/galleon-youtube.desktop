@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=YouTube
+Icon=web-browser
+Exec=xdg-open https://www.youtube.com
+NoDisplay=true
+Terminal=false
