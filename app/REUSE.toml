@@ -64,3 +64,8 @@ SPDX-License-Identifier = "MIT"
 path = "third_party/notices/PresentMon-API-MIT.txt"
 SPDX-FileCopyrightText = "2017-2024 Intel Corporation"
 SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["widgets/logos/claude.png", "widgets/logos/codex.png"]
+SPDX-FileCopyrightText = ["Anthropic PBC", "OpenAI"]
+SPDX-License-Identifier = "LicenseRef-Trademark"

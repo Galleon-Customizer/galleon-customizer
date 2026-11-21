@@ -28,6 +28,13 @@ and games discovered on the author's desktop. They illustrate the selector and
 are not standalone art assets or endorsements. Keep provenance with the captures;
 third-party icon and trademark rights remain with their respective owners.
 
+The Claude and Codex logos in [`widgets/logos/`](widgets/logos/) are a further exception. They
+only label the Claude and Codex quota cards on the screen, so the reader knows which service a
+limit belongs to. They come from the AI Quota Stream Deck plugin
+(`data/icons/streamdeck/custom/plugins/aiquota/imgs/logos/` at the root of the repository).
+Claude is a trademark of Anthropic PBC and Codex is a trademark of OpenAI; the marks stay with
+their owners, and their use implies no endorsement.
+
 Styles are free to use: manga, cyberpunk, space western, cinematic lighting. Characters, logos and footage are not.
 
 ## Where they go

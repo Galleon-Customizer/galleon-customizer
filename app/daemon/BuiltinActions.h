@@ -74,6 +74,8 @@ public:
         std::function<void(int ms)> sleep;
     };
     [[nodiscard]] static Host systemHost();
+    // A text of these actions in the chosen language (the screen compares messages with it).
+    [[nodiscard]] static QString words(const char *text);
 
     explicit BuiltinActions(QObject *parent = nullptr);
     ~BuiltinActions() override;
@@ -101,6 +103,10 @@ private:
     bool m_synchronous = false;
     QList<QPointer<QThread>> m_threads;
     std::optional<uint> m_kdeDndCookie;
+    bool m_volumeBusy = false; // a sound.volume step is running
+    int m_volumePending = 0;   // detents turned meanwhile
+    QJsonObject m_volumeOptions;
+    Done m_volumeDone;
 };
 
 }

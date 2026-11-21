@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "BuiltinActions.h"
+#include <utility>
 
 #include <QCoreApplication>
 #include <QDateTime>
@@ -1035,6 +1036,8 @@ void BuiltinActions::inWorker(std::function<void()> work)
     thread->start();
 }
 
+QString BuiltinActions::words(const char *text) { return galleond::tr(text); }
+
 void BuiltinActions::run(const QString &name, const QJsonObject &options, int times, const Done &done)
 {
 #if !defined(Q_OS_WIN)
@@ -1043,17 +1046,37 @@ void BuiltinActions::run(const QString &name, const QJsonObject &options, int ti
         return;
     }
 #endif
+    // A volume step reads the level and writes it back: two at once would both read the same
+    // level and the dial would seem stuck. The detents that come while one runs are added up
+    // and applied together once it is done.
+    const bool volume = name == QLatin1String("sound.volume") && !m_synchronous;
+    if (volume && m_volumeBusy) {
+        m_volumePending += times == 0 ? 1 : times;
+        m_volumeOptions = options;
+        m_volumeDone = done;
+        return;
+    }
+    if (volume)
+        m_volumeBusy = true;
     const Host host = m_host;
     QPointer<BuiltinActions> self(this);
-    inWorker([this, self, host, name, options, times, done] {
+    inWorker([this, self, host, name, options, times, done, volume] {
         const BuiltinResult result = execute(host, name, options, times);
         if (m_synchronous) {
             done(result);
             return;
         }
-        QMetaObject::invokeMethod(QCoreApplication::instance(), [self, done, result] {
-            if (self)
-                done(result);
+        QMetaObject::invokeMethod(QCoreApplication::instance(), [self, done, result, volume, name] {
+            if (!self)
+                return;
+            done(result);
+            if (!volume)
+                return;
+            self->m_volumeBusy = false;
+            if (self->m_volumePending != 0) {
+                const int pending = std::exchange(self->m_volumePending, 0);
+                self->run(name, self->m_volumeOptions, pending, self->m_volumeDone);
+            }
         }, Qt::QueuedConnection);
     });
 }

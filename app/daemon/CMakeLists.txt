@@ -11,6 +11,7 @@ add_library(galleond_core STATIC
     GameArtworkResolver.h GameArtworkResolver.cpp
     FpsReader.h FpsReader.cpp
     HomeWidgets.h HomeWidgets.cpp
+    ScreenLanguage.h ScreenLanguage.cpp
     FpsSetup.h FpsSetup.cpp
     LauncherCache.h LauncherCache.cpp
     AppsBackend.h AppsBackend.cpp
@@ -78,10 +79,15 @@ qt_add_resources(galleond_core "gaming_fallback"
     FILES "${CMAKE_SOURCE_DIR}/public/wallpaper_gaming/galleon-customizer_gaming_fallback.png"
 )
 
+qt_add_resources(galleond_core "screen_languages"
+    PREFIX "/screen"
+    BASE "${CMAKE_SOURCE_DIR}/bosun"
+    FILES "${CMAKE_SOURCE_DIR}/bosun/translations/fr.json" "${CMAKE_SOURCE_DIR}/bosun/translations/de.json"
+          "${CMAKE_SOURCE_DIR}/bosun/translations/es.json" "${CMAKE_SOURCE_DIR}/bosun/translations/vi.json")
 qt_add_resources(galleond_core "home_widgets"
     PREFIX "/homewidgets"
     BASE "${CMAKE_SOURCE_DIR}/widgets"
-    FILES "${CMAKE_SOURCE_DIR}/widgets/HomeOverlay.qml" "${CMAKE_SOURCE_DIR}/widgets/GameScreen.qml" "${CMAKE_SOURCE_DIR}/widgets/CarGauge.qml"
+    FILES "${CMAKE_SOURCE_DIR}/widgets/HomeOverlay.qml" "${CMAKE_SOURCE_DIR}/widgets/GameScreen.qml" "${CMAKE_SOURCE_DIR}/widgets/CarGauge.qml" "${CMAKE_SOURCE_DIR}/widgets/logos/claude.png" "${CMAKE_SOURCE_DIR}/widgets/logos/codex.png"
 )
 
 # Driver calls are isolated so a stalled vendor library cannot block the display.

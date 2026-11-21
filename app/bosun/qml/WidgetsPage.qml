@@ -8,7 +8,7 @@ Flickable {
     required property var widgets
     property int selected: 0
     readonly property var entry: widgets.layout[selected]
-    readonly property var names: ({clock: qsTr("Clock and date"), weather: qsTr("Weather"), cpu: qsTr("CPU"), memory: qsTr("RAM"), temperature: qsTr("CPU temperature"), downloads: qsTr("Downloads"), fps: qsTr("Game FPS")})
+    readonly property var names: ({clock: qsTr("Clock and date"), weather: qsTr("Weather"), cpu: qsTr("CPU"), memory: qsTr("RAM"), temperature: qsTr("CPU temperature"), downloads: qsTr("Downloads"), fps: qsTr("Game FPS"), volume: qsTr("Volume"), claude: qsTr("Claude quota"), codex: qsTr("Codex quota")})
     contentWidth: width
     contentHeight: content.height
     clip: true

@@ -123,6 +123,7 @@ private:
     [[nodiscard]] QVariantMap themeProperties();
     void tick();
     bool draw();
+    [[nodiscard]] bool livePanels() const;
     bool sendScreen(const QImage &frame);
     int m_failedSends = 0;
     std::uint32_t m_barRgb = 0xffffff;

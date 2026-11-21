@@ -635,5 +635,12 @@
   "Profile removed.": "Profile removed.",
   "A profile name has 1 to 40 letters, digits, spaces, - or _.": "A profile name has 1 to 40 letters, digits, spaces, - or _.",
   "No profile named %1": "No profile named %1",
-  "this key has no action to keep": "this key has no action to keep"
+  "this key has no action to keep": "this key has no action to keep",
+  "Muted": "Stumm",
+  "Waiting for Quota Control": "Warte auf Quota Control",
+  "Not found in Quota Control": "Nicht in Quota Control gefunden",
+  "Claude quota": "Claude-Kontingent",
+  "Codex quota": "Codex-Kontingent",
+  "Week": "Woche",
+  "Quota Control is not running": "Quota Control läuft nicht"
 }

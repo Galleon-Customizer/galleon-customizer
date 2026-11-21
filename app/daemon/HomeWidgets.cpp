@@ -31,6 +31,11 @@ QVariantList defaults() {
     const QStringList ids{QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("cpu"), QStringLiteral("memory"), QStringLiteral("temperature"), QStringLiteral("downloads"), QStringLiteral("fps")};
     for (int i = 0; i < ids.size(); ++i)
         result.append(QVariantMap{{"id", ids[i]}, {"enabled", i == 0}, {"x", i == 0 ? 30 : 440}, {"y", i == 0 ? 108 : 16 + ((i - 1) % 5) * 68}, {"width", i == 0 ? 400 : 260}, {"height", i == 0 ? 170 : 60}, {"textSize", 32}});
+    result.append(QVariantMap{{"id", "volume"}, {"enabled", false}, {"x", 364}, {"y", 8}, {"width", 348}, {"height", 180}, {"textSize", 32}});
+    result.append(QVariantMap{{"id", "claude"}, {"enabled", false}, {"x", 8}, {"y", 196}, {"width", 348}, {"height", 180}, {"textSize", 32},
+                              {"accounts", QStringList{}}});
+    result.append(QVariantMap{{"id", "codex"}, {"enabled", false}, {"x", 364}, {"y", 196}, {"width", 348}, {"height", 180}, {"textSize", 32},
+                              {"accounts", QStringList{}}});
     return result;
 }
 }
@@ -104,6 +109,14 @@ void HomeWidgets::load() {
             item["y"] = qBound(0, c.value("y").toInt(), 384 - h);
             item["textSize"] = qBound(12, c.value("textSize", 32).toInt(), 64);
             item["enabled"] = c.value("enabled", item["enabled"]);
+            if (item.value("id") == QLatin1String("clock") && c.contains("hour24")) // a 24-hour clock, whatever the locale
+                item["hour24"] = c.value("hour24").toBool();
+            if (item.contains("accounts") && c.contains("accounts")) { // the pinned accounts of a quota card
+                QStringList accounts;
+                for (const auto &account : c.value("accounts").toList())
+                    if (accounts.size() < 2 && !account.toString().trimmed().isEmpty()) accounts << account.toString().trimmed().left(64);
+                item["accounts"] = accounts;
+            }
         }
         entry = item;
     }
@@ -515,6 +528,81 @@ void HomeWidgets::weather() {
         reply->deleteLater();
     });
 }
+bool HomeWidgets::widgetEnabled(const QString &id) const {
+    for (const auto &entry : m_layout) { const auto item = entry.toMap(); if (item["id"] == id && item["enabled"].toBool()) return true; }
+    return false;
+}
+void HomeWidgets::pollVolume() {
+    if (!widgetEnabled(QStringLiteral("volume"))) return;
+#ifndef Q_OS_WIN
+    // The level of the default output, as the Windows "Output Device Control" dial showed it.
+    QProcess wpctl;
+    wpctl.start(QStringLiteral("wpctl"), {QStringLiteral("get-volume"), QStringLiteral("@DEFAULT_AUDIO_SINK@")});
+    if (!wpctl.waitForFinished(1000)) { wpctl.kill(); wpctl.waitForFinished(500); return; }
+    const QString out = QString::fromUtf8(wpctl.readAllStandardOutput());
+    static const QRegularExpression level(QStringLiteral("Volume:\\s*([\\d.]+)"));
+    const auto match = level.match(out);
+    if (!match.hasMatch()) { m_values.remove("volume"); return; }
+    const int percent = std::clamp(int(std::lround(match.captured(1).toDouble() * 100)), 0, 100);
+    m_values["volume"] = QVariantMap{{"percent", percent}, {"muted", out.contains(QLatin1String("MUTED"))}};
+#endif
+}
+void HomeWidgets::refreshVolume() {
+    const auto before = m_values.value(QStringLiteral("volume"));
+    pollVolume();
+    if (m_values.value(QStringLiteral("volume")) != before) Q_EMIT changed();
+}
+void HomeWidgets::pollQuota() {
+    if ((!widgetEnabled(QStringLiteral("claude")) && !widgetEnabled(QStringLiteral("codex"))) || m_quotaPending
+        || QDateTime::currentSecsSinceEpoch() - m_quotaAt < 30) return;
+    // Quota Control (the same local service the Windows plugin read) gives the limits of every account.
+    QNetworkRequest request(QUrl(QStringLiteral("http://127.0.0.1:6736/v1/limits")));
+    request.setTransferTimeout(8000);
+    m_quotaPending = true; m_quotaAt = QDateTime::currentSecsSinceEpoch();
+    auto *reply = m_network.get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        m_quotaPending = false;
+        const auto providers = QJsonDocument::fromJson(reply->read(4 * 1024 * 1024)).object().value(QStringLiteral("providers")).toObject();
+        const bool ok = reply->error() == QNetworkReply::NoError && !providers.isEmpty();
+        reply->deleteLater();
+        const QString week = QCoreApplication::translate("HomeWidgets", "Week");
+        const QHash<QString, QList<QPair<QString, QString>>> rows{
+            {QStringLiteral("claude"), {{"session", "5h"}, {"weekly", week}, {"fable", "Fable"}}},
+            {QStringLiteral("codex"), {{"session", "5h"}, {"weekly", week}}}};
+        for (const auto &entry : m_layout) {
+            const auto item = entry.toMap();
+            const QString id = item.value("id").toString();
+            if (!rows.contains(id)) continue;
+            if (!ok) {
+                if (!m_values.value(id).canConvert<QVariantMap>() || !m_values.value(id).toMap().contains("accounts"))
+                    m_values[id] = QVariantMap{{"message", QCoreApplication::translate("HomeWidgets", "Quota Control is not running")}};
+                continue;
+            }
+            QVariantList blocks;
+            for (const auto &pinned : item.value("accounts").toStringList()) {
+                QVariantMap block{{"account", pinned}, {"found", false}};
+                for (auto it = providers.begin(); it != providers.end(); ++it) {
+                    const auto value = it.value().toObject();
+                    const QString email = value.value("displayName").toString().section(QStringLiteral("·"), -1).trimmed();
+                    if (it.key().section('@', 0, 0) != id || email.section('@', 0, 0) != pinned) continue;
+                    QVariantList bars;
+                    const auto resources = value.value("resources").toObject();
+                    for (const auto &[key, label] : rows.value(id)) {
+                        const auto resource = resources.value(key).toObject();
+                        if (!resource.value("remaining").isDouble() || bars.size() == 2) continue;
+                        bars.append(QVariantMap{{"label", label}, {"remaining", std::clamp(resource.value("remaining").toInt(), 0, 100)}});
+                    }
+                    block = {{"account", pinned}, {"found", true}, {"plan", value.value("plan").toString().left(24)},
+                             {"stale", value.value("stale").toBool()}, {"rows", bars}};
+                    break;
+                }
+                blocks.append(block);
+            }
+            m_values[id] = QVariantMap{{"accounts", blocks}};
+        }
+        Q_EMIT changed();
+    });
+}
 void HomeWidgets::simulateOldFirmware() {
     if (!m_draftMode || m_firmwareSimulation) return;
     m_firmwareSimulation = true;
@@ -710,6 +798,8 @@ void HomeWidgets::refresh() {
         }
     }
     weather();
+    pollVolume();
+    pollQuota();
     // Disabled cards do not wake the renderer: the default remains a minute clock.
     for (const auto &entry : m_layout) {
         const auto item = entry.toMap();

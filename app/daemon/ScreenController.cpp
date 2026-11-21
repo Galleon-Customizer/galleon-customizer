@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "ScreenController.h"
+#include "BuiltinActions.h"
 #include <QFontMetricsF>
 #include <QRegularExpression>
 #include <QPainter>
@@ -113,7 +114,7 @@ ScreenController::ScreenController(galleon::StreamDeck *deck,
         Q_EMIT gameArtworkPendingChanged(m_homeWidgets.gameArtworkPending());
         const bool active = gameActive();
         if (active != m_lastGameActive) { m_lastGameActive = active; Q_EMIT gameActiveChanged(active); }
-        if (!m_wallpaper.isEmpty() || m_gameShown || m_homeWidgets.gameState().value("active").toBool()) draw();
+        if (!m_wallpaper.isEmpty() || m_gameShown || m_homeWidgets.gameState().value("active").toBool() || livePanels()) draw();
     });
     connect(&m_homeWidgets, &HomeWidgets::gameArtworkChoiceCancelled, this, [this] {
         Q_EMIT gameArtworkPendingChanged(false);
@@ -170,11 +171,30 @@ QStringList ScreenController::Wallpapers() const
     return names;
 }
 
+bool ScreenController::livePanels() const
+{
+    // The panels of the Windows profile (volume, AI quota) are worth a screen of their own:
+    // with one of them on, the home screen is drawn on black when no wallpaper is chosen.
+    for (const auto &entry : m_homeWidgets.layout()) {
+        const auto item = entry.toMap();
+        const QString id = item.value(QStringLiteral("id")).toString();
+        if (item.value(QStringLiteral("enabled")).toBool()
+            && (id == QLatin1String("volume") || id == QLatin1String("claude") || id == QLatin1String("codex")))
+            return true;
+    }
+    return false;
+}
+
 void ScreenController::restore()
 {
     const QString name = settings().value(settingWallpaper()).toString();
-    if (name.isEmpty())
+    if (name.isEmpty()) {
+        if (livePanels()) { // no wallpaper, but the panels are shown on black
+            draw();
+            scheduleNextMinute();
+        }
         return;
+    }
     if (!m_catalog.find(name)) {
         qWarning() << "galleon-customizerd: the saved wallpaper" << name << "is not in the catalog: the screen is left as it is";
         return;
@@ -462,6 +482,20 @@ void ScreenController::onNowPlayingChanged()
 
 void ScreenController::showMessage(const QString &text, bool ok)
 {
+    bool volumeCard = false;
+    for (const auto &entry : m_homeWidgets.layout()) {
+        const auto item = entry.toMap();
+        if (item.value(QStringLiteral("id")) == QLatin1String("volume") && item.value(QStringLiteral("enabled")).toBool())
+            volumeCard = true;
+    }
+    if (volumeCard) {
+        // The volume card shows the new level at once; its "Volume N%" message would only
+        // cover the cards below it.
+        m_homeWidgets.refreshVolume();
+        const QString volume = BuiltinActions::words("Volume %1%").section(QStringLiteral("%1"), 0, 0);
+        if (ok && !volume.isEmpty() && text.startsWith(volume))
+            return;
+    }
     m_message = text.trimmed().left(60);
     m_messageOk = ok;
     if (m_message.isEmpty())
@@ -555,7 +589,7 @@ bool ScreenController::draw()
 {
     const WallpaperEntry *entry = m_catalog.find(m_wallpaper);
     const bool game = m_homeWidgets.gameState().value(QStringLiteral("active")).toBool() && (!m_choosingWallpaper || m_gameArtworkChoosing) && !m_themeChoosing;
-    if ((!entry && !game && !m_gameShown) || !deckAvailable() || m_suspended)
+    if ((!entry && !game && !m_gameShown && !livePanels()) || !deckAvailable() || m_suspended)
         return false;
     m_gameShown = game;
     const bool nowPlaying = !game && wantsNowPlaying();

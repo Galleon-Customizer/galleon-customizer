@@ -635,5 +635,12 @@
   "Profile removed.": "Đã xóa hồ sơ.",
   "A profile name has 1 to 40 letters, digits, spaces, - or _.": "Tên hồ sơ gồm 1 đến 40 chữ cái, chữ số, khoảng trắng, - hoặc _.",
   "No profile named %1": "Không có hồ sơ nào tên %1",
-  "this key has no action to keep": "phím này không có hành động nào để giữ"
+  "this key has no action to keep": "phím này không có hành động nào để giữ",
+  "Muted": "Đã tắt tiếng",
+  "Waiting for Quota Control": "Đang chờ Quota Control",
+  "Not found in Quota Control": "Chưa thấy trong Quota Control",
+  "Claude quota": "Quota Claude",
+  "Codex quota": "Quota Codex",
+  "Week": "Tuần",
+  "Quota Control is not running": "Quota Control chưa chạy"
 }
