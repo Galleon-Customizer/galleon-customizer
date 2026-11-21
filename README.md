@@ -1,8 +1,14 @@
-# <img src="app/bosun/icons/galleon-customizer.svg" height="48" alt="" align="absmiddle"> Galleon Customizer
+<div align="center">
 
-Built for
+<img src="app/bosun/icons/galleon-customizer.svg" width="200" alt="Galleon Customizer icon">
+
+<h1>Galleon Customizer</h1>
+
+<p>Built for</p>
 
 <img src="docs/logo.webp" width="720" alt="Corsair Galleon 100 SD">
+
+</div>
 
 App and settings for the Corsair Galleon 100 SD Stream Deck keys, screen and dials on Linux.
 
