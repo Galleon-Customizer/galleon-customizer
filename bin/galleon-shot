@@ -1,8 +1,0 @@
-#!/bin/sh
-# Screenshot helper for the Galleon keys: full | area | delay
-DIR="$(xdg-user-dir PICTURES)/Screenshots"; mkdir -p "$DIR"
-case "$1" in
-  area)  exec flameshot gui  -p "$DIR" -c ;;
-  delay) exec flameshot full -p "$DIR" -c -d 3000 ;;
-  *)     exec flameshot full -p "$DIR" -c ;;
-esac

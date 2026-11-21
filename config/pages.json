@@ -29,16 +29,16 @@
         {
           "key": 0,
           "action": {
-            "type": "app",
-            "desktop": "@HOME@/.local/share/applications/galleon-shot-area.desktop"
+            "type": "combo",
+            "keys": "print"
           },
           "icon": "chup-phim-tat-0.png"
         },
         {
           "key": 1,
           "action": {
-            "type": "app",
-            "desktop": "@HOME@/.local/share/applications/galleon-shot-full.desktop"
+            "type": "combo",
+            "keys": "shift+print"
           },
           "icon": "chup-phim-tat-1.png"
         },

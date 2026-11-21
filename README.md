@@ -22,7 +22,7 @@ sudo apt update
 sudo apt install -y git cmake make g++ pkg-config \
   qt6-base-dev qt6-declarative-dev qt6-websockets-dev libhidapi-dev \
   qml6-module-qtquick qml6-module-qtquick-window qml6-module-qtqml qml6-module-qtqml-workerscript \
-  flameshot python3-gi gir1.2-gstreamer-1.0 gstreamer1.0-pipewire \
+  python3-gi gir1.2-gstreamer-1.0 gstreamer1.0-pipewire \
   gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
   wl-clipboard xclip tesseract-ocr
 ```
@@ -100,7 +100,7 @@ Dials:
 - `app/` — the app source (C++/Qt 6, CMake). GPL-3.0-or-later.
 - `config/pages.json` — keys and dials (`@HOME@` is replaced at install).
 - `config/icons/*.png` — key pictures, installed next to `pages.json`.
-- `bin/galleon-shot` — screenshots via flameshot (`full`, `area`, `delay`).
+- Screenshot keys use GNOME's own screenshot tool (Print, Shift+Print, Alt+Print), which copies each shot to the clipboard and saves it in Pictures/Screenshots.
 - `bin/galleon-screenrec` — toggle recording via the screen-cast portal + GStreamer (NVENC, x264 fallback).
 - `applications/*.desktop` — launchers the keys start (app keys can only start `.desktop` files).
 - `systemd/galleon-customizerd.service` — user service for `/usr/local/bin/galleon-customizerd`.
