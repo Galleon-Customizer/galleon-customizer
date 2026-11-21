@@ -10,13 +10,6 @@
 
 </div>
 
-App and settings for the Corsair Galleon 100 SD Stream Deck keys, screen and dials on Linux.
-
-`app/` holds the app: a fork of [GalleonCore](https://github.com/Paullux/GalleonCore) v0.3.0
-by Paul Woisard, renamed and extended (see `app/README.md`). It has two programs:
-`galleon-customizerd` (the daemon that drives the module) and `galleon-customizer`
-(the settings window, in the notification area).
-
 ## Install on Linux
 
 Tested on Ubuntu 26.04 (GNOME, Wayland). On Debian or Ubuntu:
