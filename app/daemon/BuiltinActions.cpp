@@ -85,7 +85,6 @@ QString tr(const char *text)
         {QStringLiteral("Could not change the volume"), QStringLiteral("Không đổi được âm lượng")},
         {QStringLiteral("Could not lock the screen"), QStringLiteral("Không khóa được màn hình")},
         {QStringLiteral("Could not start %1"), QStringLiteral("Không mở được %1")},
-        {QStringLiteral("Could not start flameshot"), QStringLiteral("Không mở được flameshot")},
         {QStringLiteral("Could not suspend"), QStringLiteral("Không cho máy ngủ được")},
         {QStringLiteral("Dark mode"), QStringLiteral("Chế độ tối")},
         {QStringLiteral("Do not disturb"), QStringLiteral("Không làm phiền")},
@@ -518,14 +517,6 @@ BuiltinResult screenshot(const BuiltinActions::Host &host, const QJsonObject &op
     const QString mode = options.value(QStringLiteral("mode")).toString(QStringLiteral("full"));
     const QString folder = host.picturesDir;
     QDir().mkpath(folder);
-    const bool flameshot = host.which(QStringLiteral("flameshot"));
-    if (flameshot && (options.value(QStringLiteral("use_flameshot")).toBool() || mode == QLatin1String("area"))) {
-        QStringList argv{QStringLiteral("flameshot"), mode == QLatin1String("area") ? QStringLiteral("gui") : QStringLiteral("full"),
-                         QStringLiteral("-p"), folder, QStringLiteral("-c")};
-        if (mode == QLatin1String("delay"))
-            argv << QStringLiteral("-d") << QString::number(options.value(QStringLiteral("delay")).toInt(3) * 1000);
-        return host.spawn(argv) ? BuiltinResult{} : BuiltinResult::failed(tr("Could not start flameshot"));
-    }
     if (mode == QLatin1String("delay"))
         host.sleep(std::clamp(options.value(QStringLiteral("delay")).toInt(3), 0, 60) * 1000);
     QString error;
@@ -625,7 +616,7 @@ const QList<Spec> &BuiltinActions::catalog()
         spec("clipboard.open_link"),
         spec("clipboard.plain_text"),
         spec("clipboard.clear"),
-        spec("capture.screenshot", {choice("mode", {QStringLiteral("full"), QStringLiteral("area"), QStringLiteral("delay")}), integer("delay", 0, 60), boolean("use_flameshot")}),
+        spec("capture.screenshot", {choice("mode", {QStringLiteral("full"), QStringLiteral("area"), QStringLiteral("delay")}), integer("delay", 0, 60)}),
         spec("capture.record", {}, true),
         spec("capture.color_picker"),
         spec("capture.ocr", {string("languages", 64)}),

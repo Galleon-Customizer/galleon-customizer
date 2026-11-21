@@ -255,11 +255,6 @@ private Q_SLOTS:
         QVERIFY(!r.ok);
         QVERIFY(r.message.contains(QLatin1String("cancelled")));
 
-        system.installed << QStringLiteral("flameshot");
-        r = BuiltinActions::execute(host, QStringLiteral("capture.screenshot"), {{"mode", "area"}}, 1);
-        QVERIFY(r.ok);
-        QCOMPARE(system.spawned.last(), QStringLiteral("flameshot gui -p %1 -c").arg(host.picturesDir));
-
         system.color = QColor(255, 128, 0);
         r = BuiltinActions::execute(host, QStringLiteral("capture.color_picker"), {}, 1);
         QCOMPARE(r.message, QStringLiteral("#FF8000"));

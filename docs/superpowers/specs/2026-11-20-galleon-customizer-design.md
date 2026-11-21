@@ -92,7 +92,7 @@ local patch.
 - Screen recording goes through the xdg-desktop-portal ScreenCast (as the
   current `galleon-screenrec` does), with its restore token. Full screenshots
   and the colour picker use the portal Screenshot interface; region capture
-  with annotation uses flameshot when installed (optional dependency).
+  uses the portal's interactive mode.
 - Development hardware: the owner's Galleon 100 SD, firmware v2.3.88 (the same
   version GalleonCore's measurements were taken on). Phase 1 starts with a
   capture tool run on that device to record input reports for the tests. The
@@ -140,8 +140,8 @@ The owner wants every Linux distribution and desktop, used as installed
     default profile uses standard actions only.
 - **No dependency on the user's setup.** The app ships its own icon set for
   every built-in action and a bundled font for key titles, so keys look the
-  same with any icon theme or font configuration. Optional tools (flameshot,
-  tesseract, OBS) only add extra actions; their absence never breaks a
+  same with any icon theme or font configuration. Optional tools (tesseract,
+  OBS) only add extra actions; their absence never breaks a
   default key.
 - **Packaging.** Primary: Flatpak (Flathub) — one package for every
   distribution, bringing GTK 4, libadwaita, Python, hidapi, Pillow, GStreamer
