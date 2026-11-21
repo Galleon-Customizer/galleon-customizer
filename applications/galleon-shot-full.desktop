@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Chụp màn hình
-Icon=camera-photo
-Exec=@HOME@/.local/bin/galleon-shot full
-NoDisplay=true
-Terminal=false

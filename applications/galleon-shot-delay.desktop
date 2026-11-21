@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Chụp sau 3 giây
-Icon=alarm-symbolic
-Exec=@HOME@/.local/bin/galleon-shot delay
-NoDisplay=true
-Terminal=false
