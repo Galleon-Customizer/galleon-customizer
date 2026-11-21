@@ -57,7 +57,7 @@ bool sameDownload(const QUrl &url, const QString &tag, const QString &name)
 {
     return url.isValid() && url.scheme() == QStringLiteral("https") && url.host() == QStringLiteral("github.com")
         && url.userInfo().isEmpty() && url.port() == -1 && !url.hasQuery() && !url.hasFragment()
-        && url.path() == QStringLiteral("/Galleon-Customizer/galleon-customizer/releases/download/%1/%2").arg(tag, name);
+        && url.path() == QStringLiteral("/buidangminh23/galleon-customizer/releases/download/%1/%2").arg(tag, name);
 }
 } // namespace
 
@@ -84,7 +84,7 @@ std::optional<UpdateRelease> parseUpdateRelease(const QByteArray &json, const Up
     if (!parsed || parsed->prerelease) return std::nullopt;
     const auto assets = object.value(QStringLiteral("assets")).toArray();
     if (assets.size() > 256) return std::nullopt;
-    UpdateRelease result{tag, parsed->text, QUrl(QStringLiteral("https://github.com/Galleon-Customizer/galleon-customizer/releases/tag/") + tag), {}, {}};
+    UpdateRelease result{tag, parsed->text, QUrl(QStringLiteral("https://github.com/buidangminh23/galleon-customizer/releases/tag/") + tag), {}, {}};
     const auto pattern = assetPattern(platform, result.version);
     if (pattern.isEmpty()) return result;
     const QRegularExpression matcher(pattern);

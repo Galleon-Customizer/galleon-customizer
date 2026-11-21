@@ -25,7 +25,7 @@ sudo apt install -y git cmake make g++ pkg-config \
 ```
 
 ```bash
-git clone https://github.com/Galleon-Customizer/galleon-customizer.git
+git clone https://github.com/buidangminh23/galleon-customizer.git
 ```
 
 ```bash

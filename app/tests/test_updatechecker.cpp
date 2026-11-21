@@ -22,7 +22,7 @@ QByteArray release(const QString &tag = QStringLiteral("v0.3.0"), const QString 
     return QJsonDocument(QJsonObject{{QStringLiteral("tag_name"), tag}, {QStringLiteral("draft"), false},
         {QStringLiteral("prerelease"), false}, {QStringLiteral("assets"), QJsonArray{QJsonObject{
             {QStringLiteral("name"), asset}, {QStringLiteral("state"), QStringLiteral("uploaded")},
-            {QStringLiteral("browser_download_url"), url.isEmpty() ? QStringLiteral("https://github.com/Galleon-Customizer/galleon-customizer/releases/download/%1/%2").arg(tag, asset) : url}}}}}).toJson();
+            {QStringLiteral("browser_download_url"), url.isEmpty() ? QStringLiteral("https://github.com/buidangminh23/galleon-customizer/releases/download/%1/%2").arg(tag, asset) : url}}}}}).toJson();
 }
 class Reply final : public QNetworkReply {
 public:
@@ -327,11 +327,11 @@ private Q_SLOTS:
         QVERIFY(valid);
         QVERIFY(required(valid).download.path().endsWith(QStringLiteral("-Setup.exe")));
         QCOMPARE(required(bosun::parseUpdateRelease(bosun::updateReleaseCache(required(valid)), windowsPlatform())).download, required(valid).download);
-        for (const auto &url : {"http://github.com/Galleon-Customizer/galleon-customizer/releases/download/v0.3.0/GalleonCustomizer-0.3.0-Windows-x86_64-Setup.exe", "https://evil.example/setup.exe", "https://github.com/another/repo/setup.exe"}) {
+        for (const auto &url : {"http://github.com/buidangminh23/galleon-customizer/releases/download/v0.3.0/GalleonCustomizer-0.3.0-Windows-x86_64-Setup.exe", "https://evil.example/setup.exe", "https://github.com/another/repo/setup.exe"}) {
             const auto parsed = bosun::parseUpdateRelease(release(QStringLiteral("v0.3.0"), required(valid).assetName, QString::fromLatin1(url)), windowsPlatform());
             QVERIFY(parsed);
             QVERIFY(required(parsed).download.isEmpty());
-            QCOMPARE(required(parsed).notes, QUrl(QStringLiteral("https://github.com/Galleon-Customizer/galleon-customizer/releases/tag/v0.3.0")));
+            QCOMPARE(required(parsed).notes, QUrl(QStringLiteral("https://github.com/buidangminh23/galleon-customizer/releases/tag/v0.3.0")));
         }
         auto arm = windowsPlatform();
         arm.architecture = QStringLiteral("arm64");
@@ -423,7 +423,7 @@ private Q_SLOTS:
         QTRY_VERIFY(!checker.busy());
         QVERIFY(checker.available());
         QVERIFY(urls.isEmpty());
-        QCOMPARE(manager.last.url(), QUrl(QStringLiteral("https://api.github.com/repos/Galleon-Customizer/galleon-customizer/releases/latest")));
+        QCOMPARE(manager.last.url(), QUrl(QStringLiteral("https://api.github.com/repos/buidangminh23/galleon-customizer/releases/latest")));
         checker.openDownload();
         QCOMPARE(urls.size(), 1);
         QVERIFY(urls.first().first().toUrl().path().endsWith(QStringLiteral("-Setup.exe")));

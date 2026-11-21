@@ -12,7 +12,7 @@
         "License": "GPL-3.0-or-later",
         "Name": "Galleon Clock",
         "Version": "0.1.0",
-        "Website": "https://github.com/Galleon-Customizer/galleon-customizer"
+        "Website": "https://github.com/buidangminh23/galleon-customizer"
     },
     "KPackageStructure": "Plasma/Applet",
     "X-Plasma-API-Minimum-Version": "6.0"
