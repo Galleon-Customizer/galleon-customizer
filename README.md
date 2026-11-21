@@ -21,6 +21,16 @@ actions replaced by their Ubuntu equivalents:
 | Ký hiệu | `& * ( $ % ^ ! @ # )`, Enter; the middle bottom key goes back to Phím số |
 | YouTube | open YouTube, theater, full screen, previous/play/next, -10 s, mute, +10 s, slower, captions, faster |
 
+### Key pictures
+
+Every page as it shows on the module (keys left to right, top to bottom).
+The pictures are in `config/icons/`; these previews are made from them with `config/pages.json`.
+
+<table>
+<tr><th>Chụp &amp; Phím tắt (home)</th><th>Phím số</th><th>Claude &amp; Codex</th><th>Ký hiệu</th><th>YouTube</th></tr>
+<tr><td><img src="docs/pages/chup-phim-tat.png" width="160" alt="Chụp &amp; Phím tắt (home)"></td><td><img src="docs/pages/phim-so.png" width="160" alt="Phím số"></td><td><img src="docs/pages/claude-codex.png" width="160" alt="Claude &amp; Codex"></td><td><img src="docs/pages/ky-hieu.png" width="160" alt="Ký hiệu"></td><td><img src="docs/pages/youtube.png" width="160" alt="YouTube"></td></tr>
+</table>
+
 Antigravity and Quota keys show their pictures but do nothing (no Linux app).
 The "Phiên AI" page and the AI Quota touch strip need the Windows plugin and are not ported.
 
