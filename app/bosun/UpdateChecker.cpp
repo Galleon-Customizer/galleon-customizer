@@ -146,7 +146,7 @@ void UpdateChecker::check(bool automaticRequest)
     }
     m_automaticRequest = automaticRequest;
     m_body.clear();
-    QNetworkRequest request(QUrl(QStringLiteral("https://api.github.com/repos/Galleon-Customizer/galleon-customizer/releases/latest")));
+    QNetworkRequest request(QUrl(QStringLiteral("https://api.github.com/repos/buidangminh23/galleon-customizer/releases/latest")));
     request.setRawHeader("Accept", "application/vnd.github+json");
     request.setRawHeader("X-GitHub-Api-Version", "2022-11-28");
     request.setRawHeader("User-Agent", "GalleonBosun/" + m_options.installedVersion.toUtf8());
@@ -252,5 +252,5 @@ void UpdateChecker::openReleaseNotes()
 {
     if (m_release) Q_EMIT openUrlRequested(m_release->notes);
 }
-void UpdateChecker::openWebsite() { Q_EMIT openUrlRequested(QUrl(QStringLiteral("https://github.com/Galleon-Customizer/galleon-customizer"))); }
+void UpdateChecker::openWebsite() { Q_EMIT openUrlRequested(QUrl(QStringLiteral("https://github.com/buidangminh23/galleon-customizer"))); }
 } // namespace bosun

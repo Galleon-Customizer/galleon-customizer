@@ -61,7 +61,7 @@ OpenRGBPluginInfo GalleonPlugin::GetPluginInfo()
     info.Description = "Corsair Galleon 100 SD LEDs (read-only prototype)";
     info.Version = "0.1.0";
     info.Commit = "unknown";
-    info.URL = "https://github.com/Galleon-Customizer/galleon-customizer";
+    info.URL = "https://github.com/buidangminh23/galleon-customizer";
     info.Location = OPENRGB_PLUGIN_LOCATION_TOP;
     info.Label = "Galleon";
     info.ProtocolVersion = 0;
