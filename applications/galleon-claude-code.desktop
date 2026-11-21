@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Claude Code
+Icon=utilities-terminal
+Exec=ptyxis --new-window --title "Claude Code" -x "bash -lc claude"
+NoDisplay=true
+Terminal=false

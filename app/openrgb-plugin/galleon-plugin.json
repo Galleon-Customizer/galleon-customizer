@@ -1,0 +1,8 @@
+{
+    "OpenRGBPluginAPIVersion": 5,
+    "Id": "org.galleoncustomizer.openrgb",
+    "Name": "Galleon Customizer",
+    "Url": "https://github.com/Galleon-Customizer/galleon-customizer",
+    "VersionStr": "0.1.0",
+    "Commit": "unknown"
+}

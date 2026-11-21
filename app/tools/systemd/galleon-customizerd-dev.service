@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Paul Woisard
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The same user service, running galleon-customizerd from the build tree (rebuild, then
+# `systemctl --user restart galleon-customizerd`). Copy it as ~/.config/systemd/user/galleon-customizerd.service.
+# %h is the home folder; change the path if the project is elsewhere.
+
+[Unit]
+Description=Galleon Customizer daemon (build tree)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/Documents/Galleon Customizer/build/daemon/galleon-customizerd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

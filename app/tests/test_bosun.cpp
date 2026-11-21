@@ -1,0 +1,1272 @@
+// SPDX-FileCopyrightText: 2026 Paul Woisard
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include "BosunBackend.h"
+#include "LanguageSettings.h"
+#include "DaemonStatus.h"
+#include "WallpaperLibrary.h"
+#include "Required.h"
+
+#include <AppsBackend.h>
+
+#include <QDir>
+#include <QFile>
+#include <QGuiApplication>
+#include <QFontMetricsF>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QQmlApplicationEngine>
+#include <QQmlComponent>
+#include <QQmlPropertyMap>
+#include <QQuickWindow>
+#include <QPointer>
+#include <QQuickItem>
+#include <QSignalSpy>
+#include <QTemporaryDir>
+#include <QTest>
+
+namespace {
+
+// Two themes and two pages: the first has an application, a media key and a page key.
+QByteArray twoThemes()
+{
+    return R"({
+  "version": 1,
+  "home": "main",
+  "themes": [
+    {"name": "Control", "page": "main", "color": "#ffd600"},
+    {"name": "Music", "page": "music", "color": "#e53935"}
+  ],
+  "pages": {
+    "main": {"keys": [
+      {"key": 0, "label": "Play", "action": {"type": "media", "command": "play-pause"}},
+      {"key": 1, "action": {"type": "app", "desktop": "nothing-like-this.desktop"}},
+      {"key": 2, "label": "More", "action": {"type": "page", "page": "music"}}
+    ]},
+    "music": {"keys": [
+      {"key": 11, "label": "Back", "action": {"type": "back"}}
+    ], "steam": {"max": 4}}
+  }
+})";
+}
+
+// A program that prints what ffprobe would, in place of ffprobe.
+QString fakeProbe(const QString &dir, const QByteArray &json)
+{
+    QString script = dir + QStringLiteral("/fake-ffprobe");
+    QFile file(script);
+    if (!file.open(QIODevice::WriteOnly))
+        return {};
+    file.write("#!/bin/sh\ncat <<'EOF'\n" + json + "\nEOF\n");
+    file.close();
+    QFile::setPermissions(script, QFile::permissions(script) | QFile::ExeUser);
+    return script;
+}
+
+// A program in place of FFmpeg: lists an H.264 encoder, and for a conversion runs `body`
+// (the last argument is the file to write; its arguments are kept in `<file>.args`).
+QString fakeFfmpeg(const QString &dir, const QString &body)
+{
+    QString script = dir + QStringLiteral("/fake-ffmpeg");
+    QFile file(script);
+    if (!file.open(QIODevice::WriteOnly))
+        return {};
+    file.write(("#!/bin/sh\ncase \"$*\" in\n  *-encoders*) printf ' V....D libx264 libx264 H.264\\n'; exit 0;;\nesac\n"
+                "for last; do :; done\nfor a in \"$@\"; do echo \"$a\" >> \"$last.args\"; done\n" + body + "\n").toUtf8());
+    file.close();
+    QFile::setPermissions(script, QFile::permissions(script) | QFile::ExeUser);
+    return script;
+}
+
+QByteArray wideProbe()
+{
+    return R"({"streams": [{"codec_name": "h264", "width": 1920, "height": 1080, "avg_frame_rate": "24/1"}], "format": {"duration": "12"}})";
+}
+
+QByteArray saverPages(const QString &videos, const QString &geometry = QStringLiteral(
+                                                 R"("geometry": {"screen_mm": [62.6, 33.0], "key_mm": [13.7, 13.7], "gap_mm": [5.4, 5.4], "screen_to_keys_mm": 5.4},)"))
+{
+    return (QStringLiteral(R"({"version": 1, "home": "main", "pages": {"main": {"keys": []}}, "screensaver": {)") + geometry
+            + QStringLiteral(R"("idle_minutes": 3, "fps": 12, "while_playing": true, "video": [)") + videos + QStringLiteral("]}}"))
+        .toUtf8();
+}
+
+bool writeFile(const QString &path, const QByteArray &bytes)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        return false;
+    return file.write(bytes) == bytes.size();
+}
+
+class FakeFilePicker final : public QObject
+{
+    Q_OBJECT
+public:
+    QString picturePath;
+    QString videoPath;
+    Q_INVOKABLE QString picture() { return picturePath; }
+    Q_INVOKABLE QString video() { return videoPath; }
+};
+
+class TestBosun : public QObject
+{
+    Q_OBJECT
+
+private Q_SLOTS:
+    void fpsDialogGroupsSelectionsAndKeepsApplyVisible() {
+        // An in-memory model: this UI test never scans or edits real launchers.
+        QQmlEngine engine;
+        QQmlComponent fakeComponent(&engine);
+        fakeComponent.setData(R"(import QtQml
+QtObject {
+    property var rows: [
+        {id: "common", group: "Commun", label: "Configuration MangoHud et dossier CSV", enabled: true, note: ""},
+        {id: "one", group: "Steam · natif", label: "Jeu 1", enabled: true, note: "mangohud %command%"},
+        {id: "two", group: "Steam · natif", label: "Jeu 2", enabled: true, note: "mangohud %command%"},
+        {id: "future", group: "Heroic · Flatpak", label: "Paramètres généraux · futurs jeux", enabled: true, note: ""},
+        {id: "installed", group: "Heroic · Flatpak", label: "Jeu déjà installé", enabled: true, note: ""},
+        {id: "unsupported", group: "Lutris · natif", label: "Format non reconnu", enabled: false, note: "Action manuelle nécessaire"}
+    ]
+    property var results: []
+    property bool busy: false
+    property string error: ""
+    property var applied: []
+    signal changed()
+    function scan() { changed() }
+    function apply(ids) { applied = ids; busy = true; changed() }
+    function restore(token) { }
+})", QUrl());
+        const std::unique_ptr<QObject> fake(fakeComponent.create());
+        QVERIFY2(fake, qPrintable(fakeComponent.errorString()));
+        // BosunBackend initializes the embedded UI resource.
+        const QTemporaryDir folder;
+        const bosun::BosunBackend backend(folder.filePath("pages.json"));
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/bosun/qml/FpsSetupDialog.qml")));
+        const std::unique_ptr<QObject> dialog(component.createWithInitialProperties({{"setup", QVariant::fromValue(fake.get())}}));
+        QVERIFY2(dialog, qPrintable(component.errorString()));
+        bosun::LanguageSettings languages({});
+        languages.setPreference("de");
+        QVariant label;
+        const QVariantMap steamRow{{"kind", "steam-shortcut"}, {"label", "Mon jeu %1 · hors boutique · compte 42"}};
+        QVERIFY(QMetaObject::invokeMethod(dialog.get(), "rowLabel", Q_RETURN_ARG(QVariant, label), Q_ARG(QVariant, steamRow)));
+        QCOMPARE(label.toString(), QStringLiteral("Mon jeu %1 · ohne Shop · Konto 42"));
+        const QVariantMap bottleRow{{"kind", "bottles"}, {"label", "Ma bouteille · toute la bouteille"}};
+        QVERIFY(QMetaObject::invokeMethod(dialog.get(), "rowLabel", Q_RETURN_ARG(QVariant, label), Q_ARG(QVariant, bottleRow)));
+        QCOMPARE(label.toString(), QStringLiteral("Ma bouteille · ganze Flasche"));
+        languages.setPreference("en");
+        QVERIFY(QMetaObject::invokeMethod(dialog.get(), "selectAll", Q_ARG(QVariant, true)));
+        QCOMPARE(dialog->property("selectionCount").toInt(), 5);
+        QVERIFY(QMetaObject::invokeMethod(dialog.get(), "toggleGroup", Q_ARG(QVariant, QStringLiteral("Steam · natif"))));
+        QCOMPARE(dialog->property("selectionCount").toInt(), 3);
+        QVERIFY(QMetaObject::invokeMethod(dialog.get(), "toggleGroup", Q_ARG(QVariant, QStringLiteral("Steam · natif"))));
+        QCOMPARE(dialog->property("selectionCount").toInt(), 5);
+        auto *window = qobject_cast<QQuickWindow *>(dialog.get());
+        QVERIFY(window);
+        window->show();
+        QTest::qWait(80);
+        auto *apply = dialog->findChild<QQuickItem *>("fpsApplySelection");
+        QVERIFY(apply);
+        const QPointF position = apply->mapToScene(QPointF(0, 0));
+        QVERIFY(position.y() >= 0);
+        QVERIFY(position.y() + apply->height() <= window->height());
+        QVERIFY(!window->grabWindow().isNull());
+        const auto screenshot = qEnvironmentVariable("GALLEON_FPS_SETUP_SCREENSHOT");
+        if (!screenshot.isEmpty()) QVERIFY(window->grabWindow().save(screenshot));
+        QVERIFY(QMetaObject::invokeMethod(apply, "clicked"));
+        QCOMPARE(fake->property("applied").toList().size(), 5);
+        QVERIFY(!apply->isEnabled());
+        QVERIFY(QMetaObject::invokeMethod(dialog.get(), "selectAll", Q_ARG(QVariant, false)));
+        QCOMPARE(dialog->property("selectionCount").toInt(), 0);
+    }
+    void gamingArtworkGuideLoopsAndStopsWhenHidden() {
+        const QTemporaryDir dir;
+        galleond::HomeWidgets widgets(nullptr, dir.filePath("widgets.json"), true);
+        QVERIFY(widgets.setGameOptions(false, false));
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/bosun/qml/GameModePage.qml")));
+        const std::unique_ptr<QObject> page(component.createWithInitialProperties({{"widgets", QVariant::fromValue(&widgets)}}));
+        QVERIFY2(page, qPrintable(component.errorString()));
+        QQuickWindow window;
+        auto *item = qobject_cast<QQuickItem *>(page.get());
+        QVERIFY(item);
+        item->setParentItem(window.contentItem());
+        item->setSize(QSizeF(900, 700));
+        window.resize(900, 700);
+        window.show();
+        auto *guide = page->findChild<QObject *>("gamingArtworkGuide");
+        auto *timer = page->findChild<QObject *>("gamingArtworkGuideTimer");
+        QVERIFY(guide);
+        QVERIFY(timer);
+        QTRY_VERIFY(timer->property("running").toBool());
+        QCOMPARE(guide->property("instruction").toString(), QStringLiteral("Appuyez sur la molette de droite"));
+        for (int phase = 1; phase <= 13; ++phase) {
+            QVERIFY(QMetaObject::invokeMethod(timer, "triggered"));
+            QCOMPARE(guide->property("phase").toInt(), phase % 13);
+            if (phase == 2) QCOMPARE(guide->property("imageIndex").toInt(), 1);
+            if (phase == 4) QCOMPARE(guide->property("imageIndex").toInt(), 2);
+            if (phase >= 6 && phase <= 9) QCOMPARE(guide->property("secondsLeft").toInt(), 10 - phase);
+            if (phase == 10) QCOMPARE(guide->property("instruction").toString(), QStringLiteral("Image sauvée"));
+        }
+        QVERIFY(page->setProperty("visible", false));
+        QVERIFY(!timer->property("running").toBool());
+        QCOMPARE(guide->property("phase").toInt(), 0);
+        QVERIFY(page->setProperty("visible", true));
+        QTRY_VERIFY(timer->property("running").toBool());
+        window.hide();
+        QTRY_VERIFY(!timer->property("running").toBool());
+    }
+    void widgetApplyButtonPublishesTheDraft() {
+        const QTemporaryDir dir;
+        const auto file = dir.filePath("widgets.json");
+        galleond::HomeWidgets widgets(nullptr, file, true);
+        QVERIFY(widgets.setCity("Lyon"));
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/bosun/qml/WidgetsPage.qml")));
+        const std::unique_ptr<QObject> page(component.createWithInitialProperties({{"widgets", QVariant::fromValue(&widgets)}}));
+        QVERIFY2(page, qPrintable(component.errorString()));
+        auto *apply = page->findChild<QObject *>("applyWidgets");
+        QVERIFY(apply);
+        QVERIFY(!QFile::exists(file));
+        QVERIFY(QMetaObject::invokeMethod(apply, "clicked"));
+        QVERIFY(QFile::exists(file));
+        QVERIFY(!widgets.pending());
+        const galleond::HomeWidgets saved(nullptr, file);
+        QCOMPARE(saved.values().value("weatherCity").toString(), QStringLiteral("Lyon"));
+    }
+    void captureButtonTracksConfirmedStateWithoutProcessFlag() {
+        QQmlPropertyMap widgets;
+        widgets.insert("windowsCapture", true);
+        widgets.insert("pending", false);
+        widgets.insert("error", QString());
+        widgets.insert("fpsConfig", QVariantMap{});
+        widgets.insert("gameConfig", QVariantMap{});
+        widgets.insert("gameState", QVariantMap{});
+        widgets.insert("recommendedFpsFolder", QStringLiteral("/tmp/fps"));
+        widgets.insert("steamLaunchOptions", QString());
+        widgets.insert("captureStatus", QVariantMap{{"installed", true}, {"state", "waiting"}});
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/bosun/qml/GameModePage.qml")));
+        const std::unique_ptr<QObject> page(component.createWithInitialProperties({{"widgets", QVariant::fromValue(static_cast<QObject *>(&widgets))}}));
+        QVERIFY2(page, qPrintable(component.errorString()));
+        auto *button = page->findChild<QObject *>("startPresentMon");
+        QVERIFY(button);
+        QCOMPARE(button->property("text").toString(), QStringLiteral("Prêt — lancez un jeu"));
+        QVERIFY(!button->property("enabledLook").toBool());
+        widgets.insert("captureStatus", QVariantMap{{"installed", true}, {"state", "capturing"}, {"running", false}});
+        QCOMPARE(button->property("text").toString(), QStringLiteral("Arrêter la capture FPS"));
+        QVERIFY(button->property("selected").toBool());
+        widgets.insert("captureStatus", QVariantMap{{"installed", true}, {"state", "starting"}, {"starting", true}});
+        QCOMPARE(button->property("text").toString(), QStringLiteral("Démarrage de la capture FPS…"));
+        QVERIFY(!button->property("enabledLook").toBool());
+        widgets.insert("captureStatus", QVariantMap{{"installed", true}, {"state", "error"}, {"message", "API inaccessible"}});
+        QCOMPARE(button->property("text").toString(), QStringLiteral("Démarrer la capture FPS"));
+        QVERIFY(!button->property("selected").toBool());
+        QVERIFY(button->property("enabledLook").toBool());
+        widgets.insert("captureStatus", QVariantMap{{"state", "offline"}});
+        QVERIFY(!button->property("enabledLook").toBool());
+        // IPC messages remain in the daemon's language; translate fixed UI text locally.
+        const QString message = QStringLiteral("Ready. Start a supported game; capture starts automatically.");
+        widgets.insert("captureStatus", QVariantMap{{"installed", true}, {"state", "waiting"}, {"message", message}});
+        auto *status = page->findChild<QObject *>("gameCaptureStatus");
+        QVERIFY(status);
+        bosun::LanguageSettings languages({});
+        connect(&languages, &bosun::LanguageSettings::changed, &engine, &QQmlEngine::retranslate);
+        languages.setPreference("fr");
+        QCOMPARE(status->property("text").toString(), QStringLiteral("Prêt. Lancez un jeu pris en charge ; la capture démarre automatiquement."));
+        languages.setPreference("en");
+        QCOMPARE(status->property("text").toString(), message);
+        QCOMPARE(widgets.value("captureStatus").toMap().value("message").toString(), message);
+    }
+    void gameTabAppliesItsOwnFields() {
+        const QTemporaryDir dir;
+        const auto file = dir.filePath("widgets.json");
+        galleond::HomeWidgets widgets(nullptr, file, true);
+        QVERIFY(widgets.setGameOptions(false, false));
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/bosun/qml/GameModePage.qml")));
+        const std::unique_ptr<QObject> page(component.createWithInitialProperties({{"widgets", QVariant::fromValue(&widgets)}}));
+        QVERIFY2(page, qPrintable(component.errorString()));
+        const auto setField = [&](const char *name, const QString &value) {
+            auto *field = page->findChild<QObject *>(name);
+            return field && field->setProperty("value", value);
+        };
+        QVERIFY(setField("gameFpsSource", dir.path()));
+        QVERIFY(setField("gameProfileProcess", "cs2"));
+        QVERIFY(setField("gameProfileTitle", "Counter-Strike 2"));
+        QVERIFY(setField("gameProfileImage", dir.filePath("art.png")));
+        QVERIFY(!QFile::exists(file));
+        auto *apply = page->findChild<QObject *>("applyGameMode");
+        QVERIFY(apply);
+        QVERIFY(QMetaObject::invokeMethod(apply, "clicked"));
+        QVERIFY(!widgets.pending());
+        const galleond::HomeWidgets saved(nullptr, file);
+        QCOMPARE(saved.fpsConfig().value("source").toString(), dir.path());
+        QVERIFY(!saved.gameConfig().value("automatic").toBool());
+        QCOMPARE(saved.gameConfig().value("profiles").toMap().value("cs2").toMap().value("title").toString(), QStringLiteral("Counter-Strike 2"));
+        QVERIFY(!page->findChild<QObject *>("applyWidgets"));
+    }
+    void gameArtworkApplyNearImageSavesTheSameDraftAsTopApply() {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("widgets.json");
+        const QString picture = dir.filePath("neurohell.png");
+        QImage image(720, 384, QImage::Format_RGB32);
+        image.fill(Qt::darkRed);
+        QVERIFY(image.save(picture));
+        // QML invokes the non-const setGameProfile()/apply() methods through QObject.
+        galleond::HomeWidgets widgets(nullptr, file, true); // NOLINT(misc-const-correctness)
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/bosun/qml/GameModePage.qml")));
+        const std::unique_ptr<QObject> page(component.createWithInitialProperties({{"widgets", QVariant::fromValue(&widgets)}}));
+        QVERIFY2(page, qPrintable(component.errorString()));
+        const auto setField = [&](const char *name, const QString &value) {
+            auto *field = page->findChild<QObject *>(name);
+            return field && field->setProperty("value", value);
+        };
+        QVERIFY(setField("gameProfileProcess", "neurohell.exe"));
+        QVERIFY(setField("gameProfileTitle", "NeuroHell"));
+        QVERIFY(setField("gameProfileImage", picture));
+        QVERIFY(!QFile::exists(file));
+        auto *top = page->findChild<QObject *>("applyGameMode");
+        auto *nearArtwork = page->findChild<QObject *>("applyGameArtwork");
+        QVERIFY(top);
+        QVERIFY(nearArtwork);
+        QVERIFY(QMetaObject::invokeMethod(nearArtwork, "clicked"));
+        QVERIFY(!widgets.pending());
+        QVERIFY(QFile::exists(file));
+        const galleond::HomeWidgets saved(nullptr, file);
+        const auto profile = saved.gameConfig().value("profiles").toMap().value("neurohell.exe").toMap();
+        QCOMPARE(profile.value("title").toString(), QStringLiteral("NeuroHell"));
+        QCOMPARE(profile.value("image").toString(), picture);
+    }
+    void browseComesFirstAndImportsOnlyWhenAFileIsChosen()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const QString picture = dir.filePath("my picture.png");
+        QImage image(720, 384, QImage::Format_RGB32);
+        image.fill(Qt::blue);
+        QVERIFY(image.save(picture));
+        const QString video = dir.filePath("my video.mp4");
+        QVERIFY(writeFile(video, "fake video"));
+        const auto backend = std::make_unique<bosun::BosunBackend>(file, bosun::BosunBackend::Tools{.ffprobe = fakeProbe(dir.path(), wideProbe()),
+                                         .thumbnailFolder = dir.filePath("thumbs")});
+        const bosun::DaemonStatus daemon("/nonexistent/systemctl");
+        const auto library = std::make_unique<bosun::WallpaperLibrary>(bosun::WallpaperLibrary::Places{.roots = {}, .userRoot = dir.filePath("own"), .settingsFile = dir.filePath("galleon-customizerd.conf")});
+        FakeFilePicker picker;
+        picker.picturePath = picture;
+        picker.videoPath = video;
+        QQmlApplicationEngine engine;
+        engine.addImageProvider(QStringLiteral("tiles"), new bosun::TileProvider(backend.get()));
+        engine.addImageProvider(QStringLiteral("themeicon"), new galleond::ThemeIconProvider);
+        engine.addImageProvider(QStringLiteral("wallpapers"), new bosun::WallpaperThumbnails(library.get()));
+        engine.addImageProvider(QStringLiteral("wallpaperpreview"), new bosun::WallpaperPreview(library.get()));
+        engine.setInitialProperties({{QStringLiteral("backend"), QVariant::fromValue(backend.get())},
+                                     {QStringLiteral("daemon"), QVariant::fromValue(&daemon)},
+                                     {QStringLiteral("library"), QVariant::fromValue(library.get())},
+                                     {QStringLiteral("filePicker"), QVariant::fromValue(&picker)}});
+        engine.load(QUrl(QStringLiteral("qrc:/bosun/qml/Bosun.qml")));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto *root = engine.rootObjects().constFirst();
+        root->setProperty("currentTab", root->property("tabs").toList().size() - 4);
+        auto *pictureButton = root->findChild<QQuickItem *>("browseWallpaper");
+        auto *videoButton = root->findChild<QQuickItem *>("browseScreensaver");
+        QVERIFY(pictureButton);
+        QVERIFY(videoButton);
+        const auto *pictureField = root->findChild<QQuickItem *>("wallpaperPath");
+        const auto *videoField = root->findChild<QQuickItem *>("screensaverPath");
+        QVERIFY(pictureField);
+        QVERIFY(videoField);
+        QTRY_VERIFY(pictureButton->x() < pictureField->x());
+        QTRY_VERIFY(videoButton->x() < videoField->x());
+        QVERIFY(QMetaObject::invokeMethod(pictureButton, "clicked"));
+        QCOMPARE(library->candidate().value("chosen").toString(), picture);
+        QCOMPARE(library->candidate().value("state").toString(), QStringLiteral("ready"));
+        const auto *crop = root->findChild<QQuickItem *>("wallpaperCrop");
+        QVERIFY(crop);
+        QTRY_VERIFY(crop->isVisible());
+        picker.picturePath.clear(); // cancel preserves the existing preview
+        QVERIFY(QMetaObject::invokeMethod(pictureButton, "clicked"));
+        QCOMPARE(library->candidate().value("chosen").toString(), picture);
+        root->setProperty("currentTab", root->property("tabs").toList().size() - 1);
+        QVERIFY(QMetaObject::invokeMethod(videoButton, "clicked"));
+        QCOMPARE(backend->candidate().value("path").toString(), video);
+        picker.videoPath.clear();
+        QVERIFY(QMetaObject::invokeMethod(videoButton, "clicked"));
+        QCOMPARE(backend->candidate().value("path").toString(), video);
+    }
+
+    void themesAreTheTabs()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        QVERIFY2(backend.problem().isEmpty(), qPrintable(backend.problem()));
+        const QVariantList themes = backend.themes();
+        QCOMPARE(themes.size(), 2);
+        QCOMPARE(themes.at(0).toMap().value("name").toString(), QStringLiteral("Control"));
+        QCOMPARE(themes.at(1).toMap().value("page").toString(), QStringLiteral("music"));
+        QCOMPARE(themes.at(1).toMap().value("color").toString(), QStringLiteral("#e53935"));
+    }
+
+    void aPageHasTwelveKeysAndSaysWhatTheyDo()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        const QVariantList keys = backend.keys("main");
+        QCOMPARE(keys.size(), 12);
+        const QVariantMap play = keys.at(0).toMap();
+        QCOMPARE(play.value("kind").toString(), QStringLiteral("media"));
+        QCOMPARE(play.value("label").toString(), QStringLiteral("Play"));
+        QCOMPARE(play.value("detail").toString(), QStringLiteral("play / pause"));
+        QVERIFY(!play.value("empty").toBool());
+        // An application that is not installed is shown by the name of its file.
+        const QVariantMap app = keys.at(1).toMap();
+        QCOMPARE(app.value("kind").toString(), QStringLiteral("app"));
+        QCOMPARE(app.value("label").toString(), QStringLiteral("nothing-like-this.desktop"));
+        QCOMPARE(keys.at(2).toMap().value("detail").toString(), QStringLiteral("music"));
+        QVERIFY(keys.at(3).toMap().value("empty").toBool());
+        QCOMPARE(keys.at(3).toMap().value("kind").toString(), QStringLiteral("empty"));
+        QVERIFY(backend.keys("no-such-page").isEmpty());
+    }
+
+    void whatTheModuleAddsIsSaid()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        QVERIFY(backend.autoFill("main").isEmpty());
+        QVERIFY(backend.autoFill("music").contains("Steam"));
+        QVERIFY(backend.autoFill("no-such-page").isEmpty());
+    }
+
+    void everyKeyHasItsPicture()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        for (const int key : {0, 1, 3, 11}) {
+            const QPixmap tile = backend.tile("main", key);
+            QCOMPARE(tile.size(), QSize(160, 160));
+        }
+        // A key with a label is not drawn like an empty one.
+        QVERIFY(backend.tile("main", 0).toImage() != backend.tile("main", 3).toImage());
+        // Nothing to show: an empty key, never a crash or a null picture.
+        QCOMPARE(backend.tile("no-such-page", 0).size(), QSize(160, 160));
+        QCOMPARE(backend.tile("main", 12).size(), QSize(160, 160));
+        QCOMPARE(backend.tile("main", -1).size(), QSize(160, 160));
+    }
+
+    void theProviderReadsPageAndKeyFromTheUrl()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        bosun::TileProvider provider(&backend);
+        QSize size;
+        const QPixmap labelled = provider.requestPixmap("main/0?r=3", &size, {});
+        QCOMPARE(size, QSize(160, 160));
+        QVERIFY(labelled.toImage() == backend.tile("main", 0).toImage());
+        // Bad identifiers give an empty key.
+        for (const QString &id : {QString(), QStringLiteral("main"), QStringLiteral("main/x"), QStringLiteral("/3"), QStringLiteral("main/99")}) {
+            const QPixmap blank = provider.requestPixmap(id, &size, {});
+            QCOMPARE(size, QSize(160, 160));
+            QVERIFY(blank.toImage() == backend.tile("main", 3).toImage() || blank.toImage() == backend.tile("no-such-page", 0).toImage());
+        }
+    }
+
+    void aBrokenFileIsReportedAndShowsNothing()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, R"({"version": 1, "home": "main", "pages": {"main": {"keys": [{"key": 99}]}}})"));
+        const bosun::BosunBackend backend(file);
+        QVERIFY(!backend.problem().isEmpty());
+        QVERIFY(backend.themes().isEmpty());
+        QVERIFY(backend.keys("main").isEmpty());
+        QCOMPARE(backend.tile("main", 0).size(), QSize(160, 160));
+    }
+
+    void aMissingFileShowsTheBuiltInPages()
+    {
+        const QTemporaryDir dir;
+        const bosun::BosunBackend backend(dir.filePath("none.json"));
+        QVERIFY2(backend.problem().isEmpty(), qPrintable(backend.problem()));
+        QCOMPARE(backend.keys("main").size(), 12);
+    }
+
+    void aChangeOnDiskIsSeen()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        const int before = backend.revision();
+        QSignalSpy changed(&backend, &bosun::BosunBackend::changed);
+        QVERIFY(writeFile(file, R"({"version": 1, "home": "main", "pages": {"main": {"keys": []}}})"));
+        QVERIFY(changed.wait(3000));
+        QVERIFY(backend.revision() > before);
+        QVERIFY(backend.themes().isEmpty());
+        // The file replaced as an editor does (new file, then renamed over): still watched.
+        QVERIFY(writeFile(file + ".new", twoThemes()));
+        QVERIFY(QFile::remove(file));
+        QVERIFY(QFile::rename(file + ".new", file));
+        changed.clear();
+        QTRY_VERIFY_WITH_TIMEOUT(backend.themes().size() == 2, 3000);
+    }
+
+    void theScreensaverIsOffWithoutGeometryOrVideo()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend nothing(file, {.ffprobe = "/nonexistent", .ffmpeg = "/nonexistent", .thumbnailFolder = dir.filePath("thumbs")});
+        QVERIFY(!nothing.screensaver().value("enabled").toBool());
+        QVERIFY(!nothing.screensaver().value("hasGeometry").toBool());
+        QVERIFY(nothing.screensaver().value("videos").toList().isEmpty());
+        QVERIFY(nothing.screensaver().value("canvas").toString().isEmpty());
+
+        // Geometry but no video: still off, and the size of the picture is known.
+        QVERIFY(writeFile(file, R"({"version": 1, "home": "main", "pages": {"main": {"keys": []}}, "screensaver": {
+            "geometry": {"screen_mm": [62.6, 33.0], "key_mm": [13.7, 13.7], "gap_mm": [5.4, 5.4], "screen_to_keys_mm": 5.4}}})"));
+        const bosun::BosunBackend noVideo(file, {.ffprobe = "/nonexistent", .ffmpeg = "/nonexistent", .thumbnailFolder = dir.filePath("thumbs")});
+        QVERIFY(noVideo.screensaver().value("hasGeometry").toBool());
+        QVERIFY(!noVideo.screensaver().value("enabled").toBool());
+        QCOMPARE(noVideo.screensaver().value("canvas").toString(), QStringLiteral("720 × 1258"));
+    }
+
+    void theSettingsAndTheVideosAreListed()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("night.mp4"), "not really a video"));
+        QVERIFY(writeFile(dir.filePath("notes.txt"), "not a video at all"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"({"file": "night.mp4", "title": "Night"}, {"file": "gone.mp4"}, {"file": "notes.txt"})")));
+        const bosun::BosunBackend backend(file, {.ffprobe = "/nonexistent", .ffmpeg = "/nonexistent", .thumbnailFolder = dir.filePath("thumbs")});
+        const QVariantMap saver = backend.screensaver();
+        QVERIFY(saver.value("enabled").toBool());
+        QCOMPARE(saver.value("idleMinutes").toInt(), 3);
+        QCOMPARE(saver.value("fps").toInt(), 12);
+        QVERIFY(saver.value("whilePlaying").toBool());
+        const QVariantList videos = saver.value("videos").toList();
+        QCOMPARE(videos.size(), 3);
+        const QVariantMap first = videos.at(0).toMap();
+        QCOMPARE(first.value("title").toString(), QStringLiteral("Night"));
+        QCOMPARE(first.value("name").toString(), QStringLiteral("night.mp4"));
+        QVERIFY(first.value("found").toBool());
+        QVERIFY(first.value("notes").toStringList().isEmpty()); // without ffprobe nothing is known, so nothing to say
+        QVERIFY(saver.value("probeMissing").toBool());
+        // A missing file and a file that is not a video are said, not hidden.
+        for (const int index : {1, 2}) {
+            const QVariantMap missing = videos.at(index).toMap();
+            QVERIFY(!missing.value("found").toBool());
+            QCOMPARE(missing.value("notes").toStringList().size(), 1);
+        }
+    }
+
+    void whatFfprobeSaysIsShownWithItsWarnings()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("tall.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"({"file": "tall.mp4"})")));
+        // 640 x 640 and 10 fps: square for a tall picture, below the 720 px of the screen, slower than 12.
+        const QString probe = fakeProbe(dir.path(),
+                                        R"({"streams": [{"codec_name": "h264", "width": 640, "height": 640, "avg_frame_rate": "10/1"}], "format": {"duration": "75.5"}})");
+        const bosun::BosunBackend backend(file, {.ffprobe = probe, .ffmpeg = "/nonexistent", .thumbnailFolder = dir.filePath("thumbs")});
+        QTRY_VERIFY_WITH_TIMEOUT(!backend.screensaver().value("videos").toList().at(0).toMap().value("details").toString().isEmpty(), 8000);
+        const QVariantMap video = backend.screensaver().value("videos").toList().at(0).toMap();
+        QCOMPARE(video.value("details").toString(), QStringLiteral("640 × 640 · 10.0 fps · 1:16 · h264"));
+        const QString notes = video.value("notes").toStringList().join('\n');
+        QVERIFY2(notes.contains("cut off at the sides"), qPrintable(notes));
+        QVERIFY2(notes.contains("Smaller than the screen"), qPrintable(notes));
+        QVERIFY2(notes.contains("fewer images per second"), qPrintable(notes));
+    }
+
+    void aVideoThatFfprobeCannotReadIsSaid()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("bad.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"({"file": "bad.mp4"})")));
+        const QString probe = fakeProbe(dir.path(), "this is not what ffprobe prints");
+        const bosun::BosunBackend backend(file, {.ffprobe = probe, .ffmpeg = "/nonexistent", .thumbnailFolder = dir.filePath("thumbs")});
+        QTRY_VERIFY_WITH_TIMEOUT(!backend.screensaver().value("videos").toList().at(0).toMap().value("notes").toStringList().isEmpty(), 8000);
+        QVERIFY(backend.screensaver().value("videos").toList().at(0).toMap().value("notes").toStringList().at(0).contains("ffprobe"));
+    }
+
+    void theScreensaverTabEditsTheFileAndShowsTheResult()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("a.mp4"), "x"));
+        QVERIFY(writeFile(dir.filePath("b.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4", {"file": "b.mp4", "title": "Second"})")));
+        bosun::BosunBackend backend(file, {.ffprobe = "/nonexistent/none", .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+
+        QVERIFY(backend.setIdleMinutes(30).isEmpty());
+        QVERIFY(backend.setFps(10).isEmpty());
+        QVERIFY(backend.setWhilePlaying(false).isEmpty());
+        QCOMPARE(backend.screensaver().value("idleMinutes").toInt(), 30); // read again at once, not after the file watch
+        QCOMPARE(backend.screensaver().value("fps").toInt(), 10);
+        QVERIFY(!backend.screensaver().value("whilePlaying").toBool());
+
+        QVERIFY(backend.setVideoTitle(0, "First").isEmpty());
+        QCOMPARE(backend.screensaver().value("videos").toList().at(0).toMap().value("title").toString(), QStringLiteral("First"));
+
+        QVERIFY(backend.removeVideo(0).isEmpty());
+        const QVariantList left = backend.screensaver().value("videos").toList();
+        QCOMPARE(left.size(), 1);
+        QCOMPARE(left.at(0).toMap().value("title").toString(), QStringLiteral("Second"));
+        QVERIFY(QFile::exists(dir.filePath("a.mp4"))); // the video file itself is never touched
+        QVERIFY(backend.removeVideo(0).isEmpty());
+        QVERIFY(!backend.screensaver().value("enabled").toBool());
+    }
+
+    void aRefusedEditSaysWhyAndChangesNothing()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = "/nonexistent/none", .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+        const int before = backend.revision();
+        QVERIFY(!backend.setFps(99).isEmpty());
+        QVERIFY(!backend.setIdleMinutes(0).isEmpty());
+        QVERIFY(!backend.removeVideo(7).isEmpty());
+        QCOMPARE(backend.screensaver().value("fps").toInt(), 12);
+        QCOMPARE(backend.revision(), before); // not even read again
+    }
+
+    void aChosenFileThatIsNotAVideoIsSaidAndCannotBeAdded()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("notes.txt"), "text"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = "/nonexistent/none", .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+        QVERIFY(backend.candidate().isEmpty());
+        for (const QString &chosen : {dir.filePath("notes.txt"), dir.filePath("missing.mp4"), QString("file://") + dir.filePath("notes.txt")}) {
+            backend.inspect(chosen);
+            const QVariantMap candidate = backend.candidate();
+            QCOMPARE(candidate.value("state").toString(), QStringLiteral("unusable"));
+            QVERIFY(!candidate.value("canAdd").toBool());
+            QVERIFY(!candidate.value("notes").toStringList().isEmpty());
+            QVERIFY(!backend.addCandidate("x").isEmpty());
+        }
+        QCOMPARE(backend.screensaver().value("videos").toList().size(), 1); // nothing was added
+    }
+
+    void aChosenVideoIsLookedAtThenAddedAsItIs()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("Night Rain.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        // Wide (1920 x 1080), 24 fps: the sides will be cut.
+        const QString probe = fakeProbe(dir.path(),
+                                        R"({"streams": [{"codec_name": "h264", "width": 1920, "height": 1080, "avg_frame_rate": "24/1"}], "format": {"duration": "12"}})");
+        bosun::BosunBackend backend(file, {.ffprobe = probe, .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+        backend.inspect(QUrl::fromLocalFile(dir.filePath("Night Rain.mp4")).toString()); // as a file dialog gives it
+        QCOMPARE(backend.candidate().value("state").toString(), QStringLiteral("checking"));
+        QVERIFY(!backend.candidate().value("canAdd").toBool());
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        const QVariantMap candidate = backend.candidate();
+        QCOMPARE(candidate.value("details").toString(), QStringLiteral("1920 × 1080 · 24.0 fps · 12 s · h264"));
+        QVERIFY(candidate.value("notes").toStringList().join('\n').contains("at the sides"));
+        QVERIFY(candidate.value("canAdd").toBool());
+        QCOMPARE(candidate.value("suggestedTitle").toString(), QStringLiteral("Night Rain"));
+
+        QVERIFY(backend.addCandidate("").isEmpty()); // no title given: the name of the file
+        QVERIFY(backend.candidate().isEmpty());
+        const QVariantList videos = backend.screensaver().value("videos").toList();
+        QCOMPARE(videos.size(), 2);
+        QCOMPARE(videos.at(1).toMap().value("title").toString(), QStringLiteral("Night Rain"));
+        QCOMPARE(videos.at(1).toMap().value("file").toString(), dir.filePath("Night Rain.mp4")); // where it is, not a copy
+    }
+
+    void aVideoAlreadyInTheListOrAFullListCannotBeAdded()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("a.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = "/nonexistent/none", .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+        backend.inspect(dir.filePath("a.mp4"));
+        QVERIFY(!backend.candidate().value("canAdd").toBool());
+        QVERIFY(backend.candidate().value("why").toString().contains("already"));
+        QVERIFY(!backend.addCandidate("again").isEmpty());
+
+        QStringList names;
+        for (int i = 0; i < galleond::MaxScreensaverVideos; ++i)
+            names << QStringLiteral(R"("v%1.mp4")").arg(i);
+        QVERIFY(writeFile(file, saverPages(names.join(','))));
+        backend.reload();
+        QVERIFY(writeFile(dir.filePath("new.mp4"), "x"));
+        backend.inspect(dir.filePath("new.mp4"));
+        QVERIFY(!backend.candidate().value("canAdd").toBool());
+        QVERIFY(backend.candidate().value("why").toString().contains("full"));
+    }
+
+    void aVideoThatFfprobeCannotReadCannotBeAdded()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("bad.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        const QString probe = fakeProbe(dir.path(), "not what ffprobe prints");
+        bosun::BosunBackend backend(file, {.ffprobe = probe, .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+        backend.inspect(dir.filePath("bad.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("unusable"), 8000);
+        QVERIFY(!backend.candidate().value("canAdd").toBool());
+        QVERIFY(!backend.addCandidate("x").isEmpty());
+    }
+
+    void theChoiceCanBeDropped()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("a.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("b.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = "/nonexistent/none", .ffmpeg = "/nonexistent/none", .thumbnailFolder = dir.filePath("thumbs")});
+        backend.inspect(dir.filePath("a.mp4"));
+        QVERIFY(!backend.candidate().isEmpty());
+        backend.clearCandidate();
+        QVERIFY(backend.candidate().isEmpty());
+        QVERIFY(!backend.addCandidate("x").isEmpty()); // nothing chosen
+    }
+
+    void aConversionCutsTheVideoAddsTheResultAndKeepsTheOriginal()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("Night Rain.mp4"), "original"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()),
+                                           .ffmpeg = fakeFfmpeg(dir.path(), "echo out_time_us=6000000; printf converted > \"$last\"; exit 0"),
+                                           .thumbnailFolder = dir.filePath("thumbs"),
+                                           .convertedFolder = dir.filePath("converted")});
+        backend.inspect(dir.filePath("Night Rain.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        // A rectangle of other proportions: it is made valid before FFmpeg sees it (500 wide, 874 high).
+        QVERIFY(backend.startConversion(100, 0, 500, 900, "").isEmpty());
+        QCOMPARE(backend.conversion().value("state").toString(), QStringLiteral("running"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.conversion().value("state").toString(), QStringLiteral("done"), 8000);
+
+        const QString result = dir.filePath("converted/Night Rain.mp4");
+        QCOMPARE(backend.conversion().value("message").toString(), result);
+        const QVariantList videos = backend.screensaver().value("videos").toList();
+        QCOMPARE(videos.size(), 2);
+        QCOMPARE(videos.at(1).toMap().value("file").toString(), result);
+        QCOMPARE(videos.at(1).toMap().value("title").toString(), QStringLiteral("Night Rain"));
+        QVERIFY(backend.candidate().isEmpty());
+        QFile original(dir.filePath("Night Rain.mp4"));
+        QVERIFY(original.open(QIODevice::ReadOnly));
+        QCOMPARE(original.readAll(), QByteArray("original")); // the source is never touched
+        QFile arguments(result + ".partial.args");
+        QVERIFY(arguments.open(QIODevice::ReadOnly));
+        const QString text = QString::fromUtf8(arguments.readAll());
+        QVERIFY2(text.contains("crop=500:874:100:0,scale=720:1258:flags=lanczos,fps=12"), qPrintable(text));
+    }
+
+    void aConversionThatFailsSaysWhyAndAddsNothing()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("v.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()),
+                                           .ffmpeg = fakeFfmpeg(dir.path(), "echo 'Invalid data' >&2; exit 1"),
+                                           .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        backend.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        QVERIFY(backend.startConversion(651, 0, 618, 1080, "T").isEmpty());
+        QTRY_COMPARE_WITH_TIMEOUT(backend.conversion().value("state").toString(), QStringLiteral("failed"), 8000);
+        QVERIFY(backend.conversion().value("message").toString().contains("Invalid data"));
+        QCOMPARE(backend.screensaver().value("videos").toList().size(), 1);
+        QVERIFY(!backend.candidate().isEmpty()); // still there: the user can try again
+    }
+
+    void aConversionCanBeCancelled()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("v.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()), .ffmpeg = fakeFfmpeg(dir.path(), "sleep 30"),
+                                           .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        backend.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        QVERIFY(backend.startConversion(651, 0, 618, 1080, "T").isEmpty());
+        QVERIFY(!backend.startConversion(651, 0, 618, 1080, "T").isEmpty()); // one at a time
+        backend.cancelConversion();
+        QTRY_COMPARE_WITH_TIMEOUT(backend.conversion().value("state").toString(), QStringLiteral("cancelled"), 8000);
+        QCOMPARE(backend.screensaver().value("videos").toList().size(), 1);
+    }
+
+    void nothingIsConvertedWhenThereIsNothingToConvertOrNoRoom()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("v.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()), .ffmpeg = fakeFfmpeg(dir.path(), "exit 0"),
+                                           .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        QVERIFY(!backend.startConversion(0, 0, 100, 100, "x").isEmpty()); // nothing chosen
+        QStringList names;
+        for (int i = 0; i < galleond::MaxScreensaverVideos; ++i)
+            names << QStringLiteral(R"("v%1.mp4")").arg(i);
+        QVERIFY(writeFile(file, saverPages(names.join(','))));
+        backend.reload();
+        backend.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        QVERIFY(!backend.startConversion(651, 0, 618, 1080, "x").isEmpty()); // the list is full: no use converting
+        QVERIFY(!QFileInfo::exists(dir.filePath("converted")));
+    }
+
+    void theKeysCarryWhatAnEditorNeeds()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        const QVariantMap play = backend.keys("main").at(0).toMap();
+        QCOMPARE(play.value("type").toString(), QStringLiteral("media"));
+        QCOMPARE(play.value("command").toString(), QStringLiteral("play-pause"));
+        QCOMPARE(play.value("rawLabel").toString(), QStringLiteral("Play"));
+        QCOMPARE(backend.keys("main").at(2).toMap().value("pageTarget").toString(), QStringLiteral("music"));
+        QVERIFY(backend.keys("main").at(5).toMap().value("type").isNull()); // an empty key has no action to describe
+        QVERIFY(backend.pageNames().contains("music"));
+        QCOMPARE(backend.mediaCommands().size(), 12);
+        QVERIFY(bosun::BosunBackend::keypadKeys().contains("kp0"));
+    }
+
+    void aKeyIsEditedThroughTheBackend()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        bosun::BosunBackend backend(file);
+        const int before = backend.revision();
+        QVERIFY(backend.setKey("music", 3, {{"type", "media"}, {"command", "volume"}, {"step", -10}, {"label", "Quieter"}}).isEmpty());
+        QVERIFY(backend.revision() > before); // read again at once
+        const QVariantMap key = backend.keys("music").at(3).toMap();
+        QCOMPARE(key.value("command").toString(), QStringLiteral("volume"));
+        QCOMPARE(key.value("step").toInt(), -10);
+        QCOMPARE(key.value("label").toString(), QStringLiteral("Quieter"));
+        QVERIFY(backend.clearKey("music", 3).isEmpty());
+        QVERIFY(backend.keys("music").at(3).toMap().value("empty").toBool());
+        QVERIFY(!backend.setKey("music", 3, {{"type", "media"}, {"command", "nonsense"}}).isEmpty());
+        QVERIFY(!backend.setKey("music", 3, {{"type", "page"}, {"page", "no-such-page"}}).isEmpty());
+        QVERIFY(backend.keys("music").at(3).toMap().value("empty").toBool()); // refused: nothing written
+    }
+
+    void aTabIsAddedRenamedMovedAndRemovedThroughTheBackend()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        bosun::BosunBackend backend(file);
+        QVERIFY(backend.addTheme("Création Musicale", "#ab47bc").isEmpty());
+        QCOMPARE(backend.themes().size(), 3);
+        QCOMPARE(backend.themes().at(2).toMap().value("page").toString(), QStringLiteral("creation-musicale")); // the page name is made from the name
+        QCOMPARE(backend.themes().at(2).toMap().value("color").toString(), QStringLiteral("#ab47bc"));
+        QVERIFY(backend.addTheme("Création Musicale", "#ab47bc").isEmpty()); // same name again: its own page
+        QCOMPARE(backend.themes().at(3).toMap().value("page").toString(), QStringLiteral("creation-musicale-2"));
+        QCOMPARE(backend.keys("creation-musicale").size(), 12); // the page is there, empty
+
+        QVERIFY(backend.setTheme(2, "Studio", "#00acc1").isEmpty());
+        QCOMPARE(backend.themes().at(2).toMap().value("name").toString(), QStringLiteral("Studio"));
+        QVERIFY(backend.moveTheme(2, -1).isEmpty());
+        QCOMPARE(backend.themes().at(1).toMap().value("name").toString(), QStringLiteral("Studio"));
+        QVERIFY(backend.removeTheme(1).isEmpty());
+        QCOMPARE(backend.themes().size(), 3);
+        QVERIFY(!backend.pageNames().contains("creation-musicale"));
+        QVERIFY(!backend.removeTheme(0).isEmpty()); // the home page's tab stays
+        QVERIFY(!backend.addTheme("", "#ab47bc").isEmpty());
+    }
+
+    void aTabGetsItsPlusPageThroughTheBackend()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        bosun::BosunBackend backend(file);
+        QVERIFY(backend.subPagesOf("music").isEmpty());
+        QVERIFY(backend.addSubPage("music").isEmpty());
+        QCOMPARE(backend.keys("music").at(10).toMap().value("label").toString(), QStringLiteral("NEXT >"));
+        QCOMPARE(backend.keys("music-plus").at(11).toMap().value("label").toString(), QStringLiteral("< BACK"));
+        QCOMPARE(backend.subPagesOf("music"), (QStringList{"music-plus"})); // listed with its tab, and only there
+        QVERIFY(backend.subPagesOf("main").isEmpty() || !backend.subPagesOf("main").contains("music-plus"));
+        // The 12th key of this fixture's "music" is taken (a Back key): the link takes the last free one, the 11th.
+        QCOMPARE(backend.keys("music").at(10).toMap().value("pageTarget").toString(), QStringLiteral("music-plus"));
+        QCOMPARE(backend.keys("music-plus").at(11).toMap().value("type").toString(), QStringLiteral("back"));
+        QCOMPARE(backend.themes().size(), 2); // not a new tab
+        QVERIFY(backend.addSubPage("no-such-page").size() > 0);
+    }
+
+    void aSubPageTakesTheColourOfTheTabItIsShownIn()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        // "music" is the page of a theme with its own colour; shown in the tab of "main" it takes main's.
+        QVERIFY(backend.tile("music", 0, "main").toImage() != backend.tile("music", 0, "music").toImage());
+        QVERIFY(backend.tile("music", 0).toImage() == backend.tile("music", 0, "music").toImage());
+        bosun::TileProvider provider(&backend);
+        QSize size;
+        QVERIFY(provider.requestPixmap("music/0?r=7&theme=main", &size, {}).toImage() == backend.tile("music", 0, "main").toImage());
+    }
+
+    void aVideoThatCanBeCutShowsWhereTheModuleFallsAndASensibleCrop()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("v.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("v.mp4")"))); // the video is in the list already: it can still be cut
+        bosun::BosunBackend backend(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()), .ffmpeg = fakeFfmpeg(dir.path(), "exit 0"),
+                                           .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        backend.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        const QVariantMap candidate = backend.candidate();
+        QVERIFY(!candidate.value("canAdd").toBool());  // already there
+        QVERIFY(candidate.value("canCut").toBool());   // but a cut is a new file
+        QCOMPARE(candidate.value("width").toInt(), 1920);
+        QCOMPARE(candidate.value("height").toInt(), 1080);
+        QCOMPARE(candidate.value("canvasWidth").toInt(), 720);
+        QCOMPARE(candidate.value("canvasHeight").toInt(), 1258);
+        QCOMPARE(candidate.value("keyRegions").toList().size(), 12);
+        QCOMPARE(candidate.value("screen").toMap().value("width").toDouble(), 720.0);
+        const QVariantMap crop = candidate.value("crop").toMap();
+        QCOMPARE(crop.value("x").toInt(), 651);
+        QCOMPARE(crop.value("width").toInt(), 618);
+        QCOMPARE(crop.value("height").toInt(), 1080);
+    }
+
+    void theCropIsMovedAndZoomedWithinTheVideo()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("v.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend backend(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()), .ffmpeg = fakeFfmpeg(dir.path(), "exit 0"),
+                                           .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        // Nothing chosen: what is given comes back.
+        const QVariantMap given{{"x", 5}, {"y", 6}, {"width", 7}, {"height", 8}};
+        QCOMPARE(backend.cropMoved(given, 10, 10), given);
+        QCOMPARE(backend.cropZoomed(given, 2, 0, 0), given);
+        QVERIFY(backend.cropCentered().value("width").toInt() == 0);
+
+        backend.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(backend.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        const QVariantMap crop = backend.candidate().value("crop").toMap();
+        QCOMPARE(backend.cropMoved(crop, 100, 0).value("x").toInt(), 751);
+        QCOMPARE(backend.cropMoved(crop, 99999, 0).value("x").toInt(), 1302); // kept inside the video
+        QCOMPARE(backend.cropMoved(crop, -99999, 0).value("x").toInt(), 0);
+        const QVariantMap closer = backend.cropZoomed(crop, 2, 960, 540); // around the middle of the video
+        QCOMPARE(closer.value("width").toInt(), 309);
+        QCOMPARE(closer.value("height").toInt(), 540);
+        QCOMPARE(backend.cropZoomed(crop, 0.1, 960, 540).value("width").toInt(), 618); // cannot go wider than the video allows
+    }
+
+    void aFullListOrNoFfmpegMeansNoCut()
+    {
+        const QTemporaryDir dir;
+        QVERIFY(writeFile(dir.filePath("v.mp4"), "x"));
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, saverPages(R"("a.mp4")")));
+        bosun::BosunBackend noFfmpeg(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()), .ffmpeg = "/nonexistent/none",
+                                            .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        noFfmpeg.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(noFfmpeg.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        QVERIFY(!noFfmpeg.candidate().value("canCut").toBool());
+        QVERIFY(!noFfmpeg.candidate().value("cutWhy").toString().isEmpty());
+        QVERIFY(noFfmpeg.candidate().value("canAdd").toBool()); // as it is still works
+        QVERIFY(!noFfmpeg.startConversion(651, 0, 618, 1080, "x").isEmpty());
+
+        QStringList names;
+        for (int i = 0; i < galleond::MaxScreensaverVideos; ++i)
+            names << QStringLiteral(R"("v%1.mp4")").arg(i);
+        QVERIFY(writeFile(file, saverPages(names.join(','))));
+        bosun::BosunBackend full(file, {.ffprobe = fakeProbe(dir.path(), wideProbe()), .ffmpeg = fakeFfmpeg(dir.path(), "exit 0"),
+                                        .thumbnailFolder = dir.filePath("thumbs"), .convertedFolder = dir.filePath("converted")});
+        full.inspect(dir.filePath("v.mp4"));
+        QTRY_COMPARE_WITH_TIMEOUT(full.candidate().value("state").toString(), QStringLiteral("ready"), 8000);
+        QVERIFY(!full.candidate().value("canCut").toBool());
+        QVERIFY(full.candidate().value("cutWhy").toString().contains("full"));
+    }
+
+    void withTheTrayIconClosingTheWindowOnlyHidesIt()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        const bosun::BosunBackend backend(file);
+        QQmlApplicationEngine engine;
+        engine.addImageProvider(QStringLiteral("tiles"), new bosun::TileProvider(&backend));
+        engine.addImageProvider(QStringLiteral("themeicon"), new galleond::ThemeIconProvider);
+        const bosun::DaemonStatus daemon("/nonexistent/systemctl");
+        const bosun::WallpaperLibrary library({.roots = {}, .userRoot = dir.filePath("own"), .settingsFile = dir.filePath("galleon-customizerd.conf")});
+        engine.addImageProvider(QStringLiteral("wallpapers"), new bosun::WallpaperThumbnails(&library));
+        engine.addImageProvider(QStringLiteral("wallpaperpreview"), new bosun::WallpaperPreview(&library));
+        engine.setInitialProperties({{QStringLiteral("backend"), QVariant::fromValue(&backend)}, {QStringLiteral("daemon"), QVariant::fromValue(&daemon)},
+                                     {QStringLiteral("library"), QVariant::fromValue(&library)}});
+        engine.load(QUrl(QStringLiteral("qrc:/bosun/qml/Bosun.qml")));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
+        QVERIFY(window);
+        window->setProperty("hideOnClose", true);
+        window->show();
+        QVERIFY(window->isVisible());
+        QVERIFY(window->close() || !window->isVisible());
+        QVERIFY(!window->isVisible());          // hidden...
+        window->show();                         // ...and it can come back: it was not destroyed
+        QVERIFY(window->isVisible());
+        // Without the tray the window closes like any window (nothing keeps it).
+        window->setProperty("hideOnClose", false);
+        window->close();
+        QVERIFY(!window->isVisible());
+    }
+
+    void aTabShowsOnlyTheSubPagesItsOwnKeysLeadTo()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        // main -> sub-a -> sub-b; music -> sub-c; games -> main (a theme's page: not a sub-page); an orphan page nobody leads to.
+        QVERIFY(writeFile(file, QByteArray(R"({"version": 1, "home": "main",
+          "themes": [{"name": "Control", "page": "main", "color": "#ffd600"}, {"name": "Music", "page": "music", "color": "#e53935"},
+                     {"name": "Games", "page": "games", "color": "#3949ab"}],
+          "pages": {
+            "main": {"keys": [{"key": 0, "label": "A", "action": {"type": "page", "page": "sub-a"}}]},
+            "sub-a": {"keys": [{"key": 0, "label": "B", "action": {"type": "page", "page": "sub-b"}}, {"key": 1, "label": "Home", "action": {"type": "back"}}]},
+            "sub-b": {"keys": [{"key": 0, "label": "Loop", "action": {"type": "page", "page": "sub-a"}}]},
+            "music": {"keys": [{"key": 0, "label": "C", "action": {"type": "page", "page": "sub-c"}}]},
+            "sub-c": {"keys": []},
+            "games": {"keys": [{"key": 0, "label": "Main", "action": {"type": "page", "page": "main"}}]},
+            "orphan": {"keys": []}}})")));
+        const bosun::BosunBackend backend(file);
+        QVERIFY2(backend.problem().isEmpty(), qPrintable(backend.problem()));
+        QCOMPARE(backend.subPagesOf("main"), (QStringList{"sub-a", "sub-b"}));   // two levels, a loop does not repeat
+        QCOMPARE(backend.subPagesOf("music"), (QStringList{"sub-c"}));            // not main's
+        QVERIFY(backend.subPagesOf("games").isEmpty());                           // main is a theme's page: it has its tab
+        QVERIFY(backend.subPagesOf("orphan").isEmpty());
+        QVERIFY(backend.subPagesOf("no-such-page").isEmpty());
+    }
+
+    void selectedTabKeepsItsTitleVisibleWithoutMovingLanguagePicker()
+    {
+        const QTemporaryDir folder;
+        const auto file = folder.filePath("pages.json");
+        QJsonArray themes;
+        QJsonObject pages;
+        for (int i = 0; i < 8; ++i) {
+            const auto page = QStringLiteral("page%1").arg(i);
+            themes.append(QJsonObject{{"name", QString::number(i) + QString(22, QLatin1Char('W'))},
+                                      {"page", page}, {"color", "#80e5d1"}});
+            pages.insert(page, QJsonObject{{"keys", QJsonArray{}}});
+        }
+        QVERIFY(writeFile(file, QJsonDocument(QJsonObject{{"version", 1}, {"home", "page0"},
+                                                         {"themes", themes}, {"pages", pages}}).toJson()));
+        const bosun::BosunBackend backend(file);
+        const bosun::DaemonStatus daemon("/nonexistent/systemctl");
+        const bosun::WallpaperLibrary library({.roots = {}, .userRoot = folder.filePath("own"), .settingsFile = folder.filePath("galleon-customizerd.conf")});
+        bosun::LanguageSettings languages({});
+        languages.setPreference("de");
+        QQmlApplicationEngine engine;
+        engine.addImageProvider(QStringLiteral("tiles"), new bosun::TileProvider(&backend));
+        engine.addImageProvider(QStringLiteral("themeicon"), new galleond::ThemeIconProvider);
+        engine.addImageProvider(QStringLiteral("wallpapers"), new bosun::WallpaperThumbnails(&library));
+        engine.addImageProvider(QStringLiteral("wallpaperpreview"), new bosun::WallpaperPreview(&library));
+        engine.setInitialProperties({{"backend", QVariant::fromValue(&backend)}, {"daemon", QVariant::fromValue(&daemon)},
+                                     {"library", QVariant::fromValue(&library)}, {"languages", QVariant::fromValue(&languages)}});
+        engine.load(QUrl(QStringLiteral("qrc:/bosun/qml/Bosun.qml")));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+        QVERIFY(window);
+        window->setWidth(1000);
+        auto *picker = window->findChild<QQuickItem *>("languageMenu");
+        auto *viewport = window->findChild<QQuickItem *>("tabViewport");
+        auto *bar = window->findChild<QQuickItem *>("tabBar");
+        QVERIFY(picker && viewport && bar);
+        QTRY_VERIFY(picker->x() > 0); // Wait for the initial window anchors.
+        const auto pickerPosition = picker->position();
+        const auto pickerSize = picker->size();
+        for (const int index : {7, 13}) {
+            window->setProperty("currentTab", index);
+            QPointer<QQuickItem> selected;
+            for (auto *item : bar->childItems())
+                if (item->property("current").toBool()) selected = item;
+            QVERIFY(selected);
+            const auto target = viewport->property("tabWidths").toList().at(index).toDouble();
+            const auto initialWidth = selected->width();
+            QTRY_VERIFY(selected && selected->property("resizing").toBool());
+            QTest::qWait(200);
+            QVERIFY(selected && selected->width() > initialWidth && selected->width() < target);
+            QTRY_VERIFY(selected && qAbs(selected->width() - target) < 0.5);
+            QFont font = QGuiApplication::font();
+            font.setPixelSize(14);
+            const auto title = selected->property("modelData").toMap().value("title").toString();
+            QTRY_VERIFY(selected && selected->width() >= QFontMetricsF(font).horizontalAdvance(title) + 8);
+            QTRY_VERIFY(selected && selected->mapToItem(viewport, QPointF()).x() >= -1);
+            QTRY_VERIFY(selected && selected->mapToItem(viewport, QPointF()).x() + selected->width() <= viewport->width() + 1);
+            QCOMPARE(picker->position(), pickerPosition);
+            QCOMPARE(picker->size(), pickerSize);
+            QVERIFY(viewport->x() + viewport->width() <= picker->x());
+        }
+    }
+
+    void theWindowHasATabPerThemeAndTheFixedOnes()
+    {
+        const QTemporaryDir dir;
+        const QString file = dir.filePath("pages.json");
+        QVERIFY(writeFile(file, twoThemes()));
+        bosun::BosunBackend backend(file);
+        bosun::LanguageSettings languages({});
+        languages.setPreference("en");
+        QQmlApplicationEngine engine;
+        connect(&languages, &bosun::LanguageSettings::changed, &engine, &QQmlApplicationEngine::retranslate);
+        connect(&languages, &bosun::LanguageSettings::changed, &backend, [&backend] { Q_EMIT backend.changed(); });
+        engine.addImageProvider(QStringLiteral("tiles"), new bosun::TileProvider(&backend));
+        const bosun::DaemonStatus daemon("/nonexistent/systemctl");
+        const bosun::WallpaperLibrary library({.roots = {}, .userRoot = dir.filePath("own"), .settingsFile = dir.filePath("galleon-customizerd.conf")});
+        engine.addImageProvider(QStringLiteral("wallpapers"), new bosun::WallpaperThumbnails(&library));
+        engine.addImageProvider(QStringLiteral("wallpaperpreview"), new bosun::WallpaperPreview(&library));
+        engine.addImageProvider(QStringLiteral("themeicon"), new galleond::ThemeIconProvider);
+        engine.setInitialProperties({{QStringLiteral("backend"), QVariant::fromValue(&backend)}, {QStringLiteral("daemon"), QVariant::fromValue(&daemon)},
+                                     {QStringLiteral("library"), QVariant::fromValue(&library)},
+                                     {QStringLiteral("languages"), QVariant::fromValue(&languages)}});
+        engine.load(QUrl(QStringLiteral("qrc:/bosun/qml/Bosun.qml")));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        QObject *window = engine.rootObjects().constFirst();
+        // The window must be able to call what it is given (the daemon's start, the backend's edits).
+        QVERIFY(qvariant_cast<QObject *>(window->property("daemon")) != nullptr);
+        QVERIFY(qvariant_cast<QObject *>(window->property("backend")) != nullptr);
+        QCOMPARE(window->property("tabs").toList().size(), 2 + 6); // themes, new tab, keyboard, wallpapers, widgets, gaming, screensavers
+        auto *firmware = window->findChild<QObject *>("firmwareVersion");
+        auto *firmwareWarning = window->findChild<QObject *>("firmwareWarning");
+        QVERIFY(firmware);
+        QVERIFY(firmwareWarning);
+        QVERIFY(window->findChild<QObject *>("firmwareStatusBar"));
+        auto *home = qobject_cast<galleond::HomeWidgets *>(qvariant_cast<QObject *>(backend.property("homeWidgets")));
+        QVERIFY(home);
+        home->setFirmwareVersion("3.06.005");
+        QTRY_VERIFY(firmware->property("text").toString().contains("3.06.005"));
+        QCOMPARE(firmwareWarning->property("visible").toBool(), false); // keyboard tab is not selected
+        home->setFirmwareVersion("3.06.006");
+        QTRY_VERIFY(firmware->property("text").toString().contains("3.06.006"));
+        QCOMPARE(window->property("keys").toList().size(), 12);
+        QVERIFY(window->property("selected").toMap().isEmpty()); // nothing chosen yet
+        window->setProperty("selectedKey", 0);
+        QCOMPARE(window->property("selected").toMap().value("label").toString(), QStringLiteral("Play"));
+        // Unrelated backend notifications must not discard an unfinished shortcut.
+        auto *editor = window->findChild<QObject *>("keyEditor");
+        QVERIFY(editor);
+        QVERIFY(QMetaObject::invokeMethod(editor, "change", Q_ARG(QVariant, QVariant("label")),
+                                        Q_ARG(QVariant, QVariant("Unfinished shortcut"))));
+        backend.reload();
+        QVERIFY(QMetaObject::invokeMethod(&backend, "changed"));
+        QCoreApplication::processEvents();
+        QCOMPARE(editor->property("spec").toMap().value("label").toString(), QStringLiteral("Unfinished shortcut"));
+        QCOMPARE(window->property("selectedKey").toInt(), 0);
+        auto *languageMenu = window->findChild<QObject *>("languageMenu");
+        QVERIFY(languageMenu);
+        languageMenu->setProperty("expanded", true);
+        QVERIFY(QMetaObject::invokeMethod(languageMenu, "choose", Q_ARG(QVariant, QStringLiteral("fr"))));
+        QCOMPARE(languageMenu->property("expanded").toBool(), false);
+        QCOMPARE(window->property("tabs").toList().at(3).toMap().value("title").toString(), QStringLiteral("Clavier"));
+        QCOMPARE(window->property("tabs").toList().first().toMap().value("title").toString(), QStringLiteral("Control"));
+        QCOMPARE(editor->property("spec").toMap().value("label").toString(), QStringLiteral("Unfinished shortcut"));
+        QCOMPARE(backend.mediaCommands().first().toMap().value("label").toString(), QStringLiteral("Lecture / pause"));
+        languages.setPreference("en");
+        window->setProperty("selectedKey", 1);
+        QVERIFY(editor->property("spec").toMap().value("label").toString() != QStringLiteral("Unfinished shortcut"));
+        // Another tab forgets the selection; a fixed tab has no keys.
+        window->setProperty("currentTab", 1);
+        QCOMPARE(window->property("selectedKey").toInt(), -1);
+        QCOMPARE(window->property("keys").toList().size(), 12);
+        window->setProperty("currentTab", 5);
+        QVERIFY(window->property("keys").toList().isEmpty());
+        const auto tabs = window->property("tabs").toList();
+        for (int i = 0; i < tabs.size(); ++i) {
+            const auto kind = tabs[i].toMap().value("kind").toString();
+            if (kind != "widgets" && kind != "gaming") continue;
+            window->setProperty("currentTab", i);
+            auto *widgets = window->findChild<QQuickItem *>(kind == "gaming" ? "gamingPage" : "widgetsPage");
+            QVERIFY(widgets);
+            QVERIFY(widgets->isVisible());
+            if (kind == "gaming") {
+                const auto *mode = window->findChild<QQuickItem *>("gameModePage");
+                QVERIFY(mode && widgets->isAncestorOf(mode));
+                const auto *show = window->findChild<QQuickItem *>("showGamingOnPad");
+                QVERIFY(show && !show->isVisible());
+                const auto *pad = window->findChild<QQuickItem *>("gamingPadButtons");
+                QVERIFY(pad && !pad->isVisible());
+                const auto *launch = window->findChild<QQuickItem *>("steamFpsLaunchCommand");
+                QVERIFY(launch);
+                QVERIFY(launch->property("text").toString().contains("mangohud %command%"));
+                const auto *pol = window->findChild<QQuickItem *>("polFpsLaunchCommand");
+                QVERIFY(pol && pol->property("text").toString().contains("export BEFORE_WINE="));
+                QVERIFY(!pol->property("text").toString().contains("%command%"));
+                const auto *flatpak = window->findChild<QQuickItem *>("flatpakFpsAccess");
+                QVERIFY(flatpak && !flatpak->isVisible());
+                auto *manualHelp = window->findChild<QQuickItem *>("manualLauncherHelp");
+                auto *toggleHelp = window->findChild<QQuickItem *>("toggleManualLauncherHelp");
+                QVERIFY(manualHelp && toggleHelp);
+                QVERIFY(!manualHelp->isVisible());
+                QVERIFY(toggleHelp->property("text").toString().startsWith("▶"));
+                QVERIFY(QMetaObject::invokeMethod(toggleHelp, "clicked"));
+                QVERIFY(manualHelp->isVisible());
+                QVERIFY(flatpak->isVisible());
+                QVERIFY(toggleHelp->property("text").toString().startsWith("▼"));
+                QVERIFY(QMetaObject::invokeMethod(toggleHelp, "clicked"));
+                QVERIFY(!manualHelp->isVisible());
+                const auto *refresh = window->findChild<QQuickItem *>("configureMangoHudButton");
+                QVERIFY(refresh);
+            }
+            QTest::qWait(100);
+            const auto screenshot = qobject_cast<QQuickWindow *>(window)->grabWindow();
+            QVERIFY(!screenshot.isNull());
+            auto *other = window->findChild<QQuickItem *>(kind == "gaming" ? "widgetsPage" : "gamingPage");
+            QVERIFY(other);
+            QVERIFY(!other->isVisible());
+            const auto output = qEnvironmentVariable(kind == "gaming" ? "GALLEON_GAMING_SCREENSHOT" : "GALLEON_WIDGETS_SCREENSHOT");
+            if (!output.isEmpty()) QVERIFY(screenshot.save(output));
+            const auto helpOutput = qEnvironmentVariable("GALLEON_GAMING_HELP_SCREENSHOT");
+            if (kind == "gaming" && !helpOutput.isEmpty()) {
+                auto *help = window->findChild<QQuickItem *>("linuxLauncherHelp");
+                auto *contentItem = qvariant_cast<QQuickItem *>(widgets->property("contentItem"));
+                QVERIFY(help && contentItem);
+                widgets->setProperty("contentY", help->mapToItem(contentItem, QPointF()).y());
+                QTest::qWait(100);
+                QVERIFY(qobject_cast<QQuickWindow *>(window)->grabWindow().save(helpOutput));
+                widgets->setProperty("contentY", 0);
+            }
+
+        }
+        // A window that is not shown has no picture, but a shown one grabs: the pictures load.
+        window->setProperty("currentTab", 0);
+        auto *quick = qobject_cast<QQuickWindow *>(window);
+        QVERIFY(quick);
+        QVERIFY(!quick->grabWindow().isNull());
+    }
+};
+
+} // namespace
+
+int main(int argc, char *argv[])
+{
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
+    const QGuiApplication app(argc, argv);
+    TestBosun test;
+    return QTest::qExec(&test, argc, argv);
+}
+
+#include "test_bosun.moc"
