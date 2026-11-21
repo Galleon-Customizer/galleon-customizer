@@ -149,11 +149,18 @@ QImage TileRenderer::render(const KeyConfig &key, const QString &state, bool pre
         if (pressed)
             background = background.lighter(220);
     }
+    if (!key.look.background.isEmpty()) {
+        background = QColor(key.look.background);
+        if (pressed)
+            background = background.lighter(160);
+    }
     if (active)
         background = background.lighter(190);
     painter.fillPath(shape, background);
 
-    const bool hasLabel = !key.label.isEmpty();
+    const KeyLook &look = key.look;
+    const bool hasLabel = !key.label.isEmpty() && look.showTitle;
+    const TitlePosition position = look.titlePosition;
     // Local patch: a picture file without a label fills the key, as on the Stream Deck app.
     const bool picture = !hasLabel && hasImageExtension(key.icon.forState(state));
     const int iconSize = picture ? Size - 6 : (hasLabel ? 84 : 112);
@@ -162,7 +169,10 @@ QImage TileRenderer::render(const KeyConfig &key, const QString &state, bool pre
         icon = loadIconFile(fallbackIconFile, iconSize);
 
     // Icon in the upper part, label under it; a lone label is centered.
-    const QRectF iconArea(0, hasLabel ? 14 : (Size - iconSize) / 2.0, Size, iconSize);
+    // The label on top moves the icon down; in the middle, it is drawn over the icon.
+    const qreal iconTop = !hasLabel || position == TitlePosition::Middle ? (Size - iconSize) / 2.0
+                        : (position == TitlePosition::Top ? Size - 14.0 - iconSize : 14.0);
+    const QRectF iconArea(0, iconTop, Size, iconSize);
     if (!icon.isNull()) {
         const QSizeF fitted = QSizeF(icon.size()).scaled(iconArea.size(), Qt::KeepAspectRatio);
         const QRectF target(QPointF(iconArea.center().x() - (fitted.width() / 2), iconArea.center().y() - (fitted.height() / 2)), fitted);
@@ -181,8 +191,15 @@ QImage TileRenderer::render(const KeyConfig &key, const QString &state, bool pre
     if (hasLabel) {
         QFont font = painter.font();
         font.setBold(true);
-        painter.setPen(Foreground);
-        if (icon.isNull()) {
+        painter.setPen(look.titleColor.isEmpty() ? Foreground : QColor(look.titleColor));
+        if (icon.isNull() && look.fontSize > 0) {
+            // A size of its own: kept, and placed where the look says.
+            font.setPixelSize(look.fontSize);
+            painter.setFont(font);
+            const int vertical = position == TitlePosition::Top ? Qt::AlignTop
+                                         : position == TitlePosition::Bottom ? Qt::AlignBottom : Qt::AlignVCenter;
+            painter.drawText(QRectF(10, 10, Size - 20, Size - 20), Qt::AlignHCenter | vertical | Qt::TextWordWrap, key.label);
+        } else if (icon.isNull()) {
             // A label alone fills the tile: a short one (a digit of the keypad) is drawn very large; a
             // longer one is wrapped on its words, in the largest size that fits.
             const QRectF area(10, 10, Size - 20, Size - 20);
@@ -197,10 +214,15 @@ QImage TileRenderer::render(const KeyConfig &key, const QString &state, bool pre
             painter.setFont(font);
             painter.drawText(area, Qt::AlignCenter | Qt::TextWordWrap, key.label);
         } else {
-            // Under the icon: the label in the largest size that fits in two lines.
-            const QRectF area(6, Size - 50, Size - 12, 46);
-            int pixelSize = 22;
-            for (; pixelSize > 14; pixelSize -= 1) {
+            // Under the icon (or above it, or over it): the label in the largest size that fits in two lines.
+            const QRectF area(6, position == TitlePosition::Top ? 4 : (position == TitlePosition::Middle ? (Size - 46) / 2.0 : Size - 50), Size - 12, 46);
+            if (position == TitlePosition::Middle) {
+                QPainterPath band;
+                band.addRoundedRect(area.adjusted(-2, 0, 2, 0), 8, 8);
+                painter.fillPath(band, QColor(0, 0, 0, 150));
+            }
+            int pixelSize = look.fontSize > 0 ? look.fontSize : 22;
+            for (; look.fontSize == 0 && pixelSize > 14; pixelSize -= 1) {
                 font.setPixelSize(pixelSize);
                 const QRectF needed = QFontMetricsF(font).boundingRect(area, Qt::AlignCenter | Qt::TextWordWrap, key.label);
                 if (needed.height() <= area.height() && needed.width() <= area.width() + 0.5)

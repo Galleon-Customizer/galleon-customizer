@@ -331,6 +331,16 @@ Window {
                     onMoved: to => win.currentTab = to
                     onRemoved: win.currentTab = Math.max(0, win.currentTab - 1)
                 }
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#33ffffff"
+                }
+                Profiles {
+                    width: parent.width
+                    backend: win.backend
+                    onAnswered: (error, done) => win.answered(error, done)
+                }
             }
         }
     }
@@ -602,7 +612,8 @@ Window {
             text: "🌐 " + (win.languages && win.languages.preference === "system" ? qsTr("System language")
                           : win.languages && win.languages.language === "fr" ? "Français"
                           : win.languages && win.languages.language === "de" ? "Deutsch"
-                          : win.languages && win.languages.language === "es" ? "Español" : "English") + " ▾"
+                          : win.languages && win.languages.language === "es" ? "Español"
+                          : win.languages && win.languages.language === "vi" ? "Tiếng Việt" : "English") + " ▾"
             font.pixelSize: 12
         }
         MouseArea { anchors.fill: parent; onClicked: { languageMenu.forceActiveFocus(); languageMenu.expanded = !languageMenu.expanded } }
@@ -611,7 +622,7 @@ Window {
             anchors.right: parent.right
             visible: languageMenu.expanded
             Repeater {
-                model: [{code: "system", name: qsTr("System language")}, {code: "en", name: "English"}, {code: "fr", name: "Français"}, {code: "de", name: "Deutsch"}, {code: "es", name: "Español"}]
+                model: [{code: "system", name: qsTr("System language")}, {code: "en", name: "English"}, {code: "fr", name: "Français"}, {code: "de", name: "Deutsch"}, {code: "es", name: "Español"}, {code: "vi", name: "Tiếng Việt"}]
                 delegate: Rectangle {
                     id: languageOption
                     required property var modelData

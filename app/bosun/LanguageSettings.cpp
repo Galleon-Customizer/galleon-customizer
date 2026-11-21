@@ -16,7 +16,7 @@ namespace {
 bool supported(const QString &language)
 {
     return language == QStringLiteral("en") || language == QStringLiteral("fr")
-           || language == QStringLiteral("de") || language == QStringLiteral("es");
+           || language == QStringLiteral("de") || language == QStringLiteral("es") || language == QStringLiteral("vi");
 }
 }
 

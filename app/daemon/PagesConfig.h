@@ -17,6 +17,7 @@
 #include <QStringList>
 
 #include <array>
+#include <QJsonObject>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -33,9 +34,20 @@ enum class ActionType : std::uint8_t {
     WallpaperMode, // switch the dial to choosing the screen's wallpaper, and back
     Key,   // press a keyboard key (the numeric keypad...), held as long as the key is
     Steam, // start a Steam game by its application number
-    Combo, // local patch: tap a combination such as super+shift+s
-    Text,  // local patch: type a short ASCII text, then Enter if asked
+    Combo, // tap a combination such as super+shift+s
+    Text,  // type a short ASCII text, then Enter if asked
+    Url,     // open a web address (http, https, mailto) in the default browser
+    File,    // open a file or folder with its default application
+    Command, // run a shell command line, in a terminal if asked
+    Multi,   // several actions in a row, each after an optional delay
+    Toggle,  // on/off: the "on" action, then the "off" one, with a picture for each
+    Builtin, // a ready-made action (system.lock, sound.mute_input...), see BuiltinActions.h
 };
+
+inline constexpr int MaxMultiSteps = 16;
+inline constexpr int MaxStepDelayMs = 60000;
+inline constexpr int MaxCommandLength = 1000;
+inline constexpr int LongPressMs = 500;
 
 enum class MediaCommand : std::uint8_t {
     PlayPause,
@@ -65,6 +77,14 @@ struct Action
     QString keys;    // Combo: names of the fixed list joined by '+' (see KeyInjector.h)
     QString text;    // Text: printable ASCII, at most MaxTextLength characters
     bool enter = false; // Text: press Enter after the text
+    QString url;     // Url: the address; File: the path (absolute, or starting with ~/)
+    QString shell;   // Command: run with /bin/sh -c; Toggle: the status command (exit 0 = on)
+    bool terminal = false; // Command: run in a terminal window
+    // Multi: the steps in order. Toggle: [0] = the "on" action, [1] = the "off" one.
+    std::vector<Action> steps;
+    std::vector<int> delays; // Multi: milliseconds before each step (same size as steps)
+    QString builtin;      // Builtin: its name, "system.lock"
+    QJsonObject options;  // Builtin: its options, checked by BuiltinActions::checkOptions
 
     friend bool operator==(const Action &, const Action &) = default;
 };
@@ -73,7 +93,7 @@ struct Action
 struct IconSpec
 {
     QString name;                   // used when no state-specific name applies
-    QHash<QString, QString> byState; // "playing", "paused", "stopped"
+    QHash<QString, QString> byState; // "playing", "paused", "stopped"; a toggle key: "on", "off"
 
     [[nodiscard]] QString forState(const QString &state) const
     {
@@ -83,14 +103,30 @@ struct IconSpec
     friend bool operator==(const IconSpec &, const IconSpec &) = default;
 };
 
+// How a key is drawn, beyond its icon and label (the "look" of the Python Galleon Customizer).
+enum class TitlePosition : std::uint8_t { Auto, Top, Middle, Bottom };
+struct KeyLook
+{
+    QString background;  // "#RRGGBB", or empty for the theme's
+    QString titleColor;  // "#RRGGBB", or empty for white
+    int fontSize = 0;    // the label's size in pixels (6..64), 0 = the largest that fits
+    TitlePosition titlePosition = TitlePosition::Auto;
+    bool showTitle = true;
+
+    friend bool operator==(const KeyLook &, const KeyLook &) = default;
+};
+
 struct KeyConfig
 {
     int key = 0; // 0 = top left, row by row, to 11
     QString label;
     IconSpec icon;
     Action action;
+    // Done instead of `action` when the key is held for LongPressMs; `action` then runs on release.
+    std::optional<Action> longPress;
     // The words shown for the state of a shuffle or repeat key. Shuffle: off, on. Repeat: none, list, track.
     QStringList stateLabels;
+    KeyLook look;
 
     friend bool operator==(const KeyConfig &, const KeyConfig &) = default;
 };

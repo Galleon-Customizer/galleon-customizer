@@ -74,6 +74,11 @@ public:
 
     // The seconds left of the validation of the wallpaper choice, shown in a circle (0: none).
     void setCountdown(int secondsLeft);
+    // A few words over the picture for a moment ("Volume 40%" gets a level bar), as the
+    // Python Galleon Customizer showed them on the strip.
+    void showMessage(const QString &text, bool ok = true);
+    // The picture with the message drawn over it (also used by the tests).
+    [[nodiscard]] static QImage withMessage(const QImage &frame, const QString &text, bool ok);
 
     // How long the chosen wallpaper stays on the screen, before a playing track
     // takes it back: after choosing a wallpaper, and at start. For the tests.
@@ -162,6 +167,9 @@ private:
     bool m_showedNowPlaying = false; // for the log: what the screen last showed
     QString m_wallpaper; // catalog name, empty when nothing is shown
     QTimer m_minuteTimer;
+    QString m_message;
+    bool m_messageOk = true;
+    QTimer m_messageTimer; // the message goes away
     QTimer m_holdTimer;   // the wallpaper is kept for a moment, then the track returns
     bool m_holding = false;
     void startHold();

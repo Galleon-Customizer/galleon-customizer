@@ -4,6 +4,11 @@
 #include <InitialPages.h>
 
 #include "BosunBackend.h"
+#include <QCoreApplication>
+#include <BuiltinActions.h>
+#include <QJsonObject>
+#include <QRegularExpression>
+#include <QSaveFile>
 #include <RecordingIcons.h>
 
 #include "CropMath.h"
@@ -106,6 +111,12 @@ Described describe(const galleond::KeyConfig &key)
     case ActionType::Key: return {.kind = QStringLiteral("key"), .detail = action.keyName};
     case ActionType::Combo: return {.kind = QStringLiteral("combo"), .detail = action.keys};
     case ActionType::Text: return {.kind = QStringLiteral("text"), .detail = action.text};
+    case ActionType::Url: return {.kind = QStringLiteral("url"), .detail = action.url};
+    case ActionType::File: return {.kind = QStringLiteral("file"), .detail = action.url};
+    case ActionType::Command: return {.kind = QStringLiteral("command"), .detail = action.shell};
+    case ActionType::Multi: return {.kind = QStringLiteral("multi"), .detail = QString::number(action.steps.size())};
+    case ActionType::Toggle: return {.kind = QStringLiteral("toggle"), .detail = action.shell};
+    case ActionType::Builtin: return {.kind = action.builtin, .detail = {}};
     case ActionType::Theme: return {.kind = QStringLiteral("theme"), .detail = {}};
     case ActionType::WallpaperMode: return {.kind = QStringLiteral("wallpaper-mode"), .detail = {}};
     case ActionType::None: return {.kind = QStringLiteral("none"), .detail = {}};
@@ -126,7 +137,26 @@ QVariantMap configuredFields(const galleond::KeyConfig &key)
             {QStringLiteral("keyName"), action.keyName},
             {QStringLiteral("appid"), action.appid},
             {QStringLiteral("rawLabel"), key.label},
-            {QStringLiteral("rawIcon"), key.icon.name}};
+            {QStringLiteral("rawIcon"), key.icon.name},
+            {QStringLiteral("keys"), action.keys},
+            {QStringLiteral("text"), action.text},
+            {QStringLiteral("enter"), action.enter},
+            {QStringLiteral("url"), action.url},
+            {QStringLiteral("shell"), action.type == ActionType::Command ? action.shell : QString()},
+            {QStringLiteral("terminal"), action.terminal},
+            {QStringLiteral("builtin"), action.builtin},
+            {QStringLiteral("options"), action.options.toVariantMap()}};
+}
+
+QString profileFolder(const QString &pagesFile)
+{
+    return QFileInfo(pagesFile).absolutePath() + QStringLiteral("/profiles");
+}
+
+bool validProfileName(const QString &name)
+{
+    static const QRegularExpression allowed(QStringLiteral("^[\\p{L}\\p{N} _-]{1,40}$"));
+    return allowed.match(name).hasMatch() && name.trimmed() == name;
 }
 
 
@@ -628,6 +658,101 @@ QStringList BosunBackend::subPagesOf(const QString &page) const
     return found;
 }
 
+QVariantList BosunBackend::builtinActions()
+{
+    // The words of the window, in the order the Python Galleon Customizer showed them.
+    static const QHash<QString, const char *> labels{
+        {QStringLiteral("system.lock"), QT_TR_NOOP("Lock screen")},
+        {QStringLiteral("system.suspend"), QT_TR_NOOP("Suspend")},
+        {QStringLiteral("system.power"), QT_TR_NOOP("Power off…")},
+        {QStringLiteral("system.dark_mode"), QT_TR_NOOP("Dark mode")},
+        {QStringLiteral("system.dnd"), QT_TR_NOOP("Do not disturb")},
+        {QStringLiteral("system.night_light"), QT_TR_NOOP("Night light")},
+        {QStringLiteral("system.settings"), QT_TR_NOOP("Settings")},
+        {QStringLiteral("system.terminal"), QT_TR_NOOP("Terminal")},
+        {QStringLiteral("system.monitor"), QT_TR_NOOP("System monitor")},
+        {QStringLiteral("sound.volume"), QT_TR_NOOP("Volume")},
+        {QStringLiteral("sound.set_volume"), QT_TR_NOOP("Set volume")},
+        {QStringLiteral("sound.mute_output"), QT_TR_NOOP("Mute sound")},
+        {QStringLiteral("sound.mute_input"), QT_TR_NOOP("Mute microphone")},
+        {QStringLiteral("clipboard.datetime"), QT_TR_NOOP("Insert date and time")},
+        {QStringLiteral("clipboard.password"), QT_TR_NOOP("New password")},
+        {QStringLiteral("clipboard.search"), QT_TR_NOOP("Search the web for the clipboard")},
+        {QStringLiteral("clipboard.translate"), QT_TR_NOOP("Translate the clipboard")},
+        {QStringLiteral("clipboard.open_link"), QT_TR_NOOP("Open copied link")},
+        {QStringLiteral("clipboard.plain_text"), QT_TR_NOOP("Remove formatting")},
+        {QStringLiteral("clipboard.clear"), QT_TR_NOOP("Clear clipboard")},
+        {QStringLiteral("capture.screenshot"), QT_TR_NOOP("Screenshot")},
+        {QStringLiteral("capture.record"), QT_TR_NOOP("Record screen")},
+        {QStringLiteral("capture.color_picker"), QT_TR_NOOP("Pick a colour")},
+        {QStringLiteral("capture.ocr"), QT_TR_NOOP("Copy text from screen")},
+        {QStringLiteral("capture.open_folder"), QT_TR_NOOP("Open screenshots/recordings")},
+    };
+    static const QHash<QString, const char *> groups{
+        {QStringLiteral("system"), QT_TR_NOOP("System")}, {QStringLiteral("sound"), QT_TR_NOOP("Sound")},
+        {QStringLiteral("clipboard"), QT_TR_NOOP("Clipboard")}, {QStringLiteral("capture"), QT_TR_NOOP("Capture")}};
+    QVariantList result;
+    for (const galleond::BuiltinActions::Spec &spec : galleond::BuiltinActions::catalog()) {
+        QVariantList options;
+        for (const galleond::BuiltinActions::Option &option : spec.options) {
+            static const QStringList kinds{QStringLiteral("bool"), QStringLiteral("int"), QStringLiteral("string"), QStringLiteral("choice")};
+            options.append(QVariantMap{{QStringLiteral("key"), option.key}, {QStringLiteral("kind"), kinds.at(option.kind)},
+                                       {QStringLiteral("min"), option.min}, {QStringLiteral("max"), option.max},
+                                       {QStringLiteral("choices"), option.choices}});
+        }
+        const QString group = spec.name.section(QLatin1Char('.'), 0, 0);
+        result.append(QVariantMap{{QStringLiteral("id"), spec.name},
+                                  {QStringLiteral("label"), tr(labels.value(spec.name, "?"))},
+                                  {QStringLiteral("group"), tr(groups.value(group, "?"))},
+                                  {QStringLiteral("options"), options}});
+    }
+    return result;
+}
+
+QStringList BosunBackend::profiles() const
+{
+    QStringList names;
+    const QFileInfoList files = QDir(profileFolder(m_file)).entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name);
+    for (const QFileInfo &file : files)
+        names << file.completeBaseName();
+    return names;
+}
+
+QString BosunBackend::saveProfile(const QString &name)
+{
+    if (!validProfileName(name))
+        return tr("A profile name has 1 to 40 letters, digits, spaces, - or _.");
+    QFile source(m_file);
+    if (!source.open(QIODevice::ReadOnly))
+        return QCoreApplication::translate("PagesEditor", "cannot read %1: %2").arg(m_file, source.errorString());
+    const QByteArray bytes = source.readAll();
+    QDir().mkpath(profileFolder(m_file));
+    QSaveFile out(profileFolder(m_file) + QLatin1Char('/') + name + QStringLiteral(".json"));
+    if (!out.open(QIODevice::WriteOnly) || out.write(bytes) != bytes.size() || !out.commit())
+        return QCoreApplication::translate("PagesEditor", "cannot write %1: %2").arg(out.fileName(), out.errorString());
+    QFile::setPermissions(out.fileName(), QFile::ReadOwner | QFile::WriteOwner);
+    Q_EMIT changed();
+    return {};
+}
+
+QString BosunBackend::loadProfile(const QString &name)
+{
+    if (!validProfileName(name))
+        return tr("A profile name has 1 to 40 letters, digits, spaces, - or _.");
+    QFile file(profileFolder(m_file) + QLatin1Char('/') + name + QStringLiteral(".json"));
+    if (!file.open(QIODevice::ReadOnly))
+        return tr("No profile named %1").arg(name);
+    return applied(galleond::PagesEditor::replaceAll(m_file, file.read(galleond::MaxPagesFileBytes + 1)));
+}
+
+QString BosunBackend::removeProfile(const QString &name)
+{
+    if (!validProfileName(name) || !QFile::remove(profileFolder(m_file) + QLatin1Char('/') + name + QStringLiteral(".json")))
+        return tr("No profile named %1").arg(name);
+    Q_EMIT changed();
+    return {};
+}
+
 QVariantList BosunBackend::mediaCommands()
 {
     QVariantList list;
@@ -667,6 +792,15 @@ QString BosunBackend::setKey(const QString &page, int key, const QVariantMap &sp
     out.appid = spec.value(QStringLiteral("appid")).toInt();
     out.label = spec.value(QStringLiteral("label")).toString();
     out.icon = spec.value(QStringLiteral("icon")).toString();
+    out.keys = spec.value(QStringLiteral("keys")).toString();
+    out.text = spec.value(QStringLiteral("text")).toString();
+    out.enter = spec.value(QStringLiteral("enter")).toBool();
+    out.url = spec.value(QStringLiteral("url")).toString();
+    out.shell = spec.value(QStringLiteral("shell")).toString();
+    out.terminal = spec.value(QStringLiteral("terminal")).toBool();
+    if (out.type == QLatin1String("builtin"))
+        out.type = spec.value(QStringLiteral("builtin")).toString();
+    out.options = QJsonObject::fromVariantMap(spec.value(QStringLiteral("options")).toMap());
     return applied(galleond::PagesEditor::setKey(m_file, page, key, out));
 }
 

@@ -16,10 +16,8 @@
 
 #include <QDebug>
 #include <QPainter>
-#ifdef Q_OS_WIN
 #include <QDesktopServices>
 #include <QUrl>
-#endif
 #include <QDir>
 #include <QFileDevice>
 #include <QFile>
@@ -81,6 +79,13 @@ PagesController::PagesController(galleon::StreamDeck *deck, MediaController *med
         return sources;
     })
 {
+    m_opener = [](const QUrl &url) { return QDesktopServices::openUrl(url); };
+    m_commandRunner = &PagesController::runCommandLine;
+    m_statusReader = &PagesController::readStatusCommand;
+    m_builtins = new BuiltinActions(this);
+    m_togglePoll.setInterval(5000); // the state a toggle shows follows its status command
+    connect(&m_togglePoll, &QTimer::timeout, this, &PagesController::pollToggles);
+    m_togglePoll.start();
 #ifdef Q_OS_WIN
     m_launcherCache = std::make_unique<LauncherCache>();
     connect(m_launcherCache.get(), &LauncherCache::ready, this, [this](const QString &reference) {
@@ -262,6 +267,9 @@ void PagesController::setGameActive(bool active)
 
 void PagesController::setConfig(const PagesConfig &config)
 {
+    ++m_generation; // steps of a multi-action still waiting are dropped
+    m_longPressGen.fill(0);
+    m_longPressFired.fill(false);
     m_apps.clear();
 #ifdef Q_OS_WIN
     m_launcherCache->clear();
@@ -472,7 +480,14 @@ void PagesController::drawKey(int key, bool force)
             const QString word = words.value(std::min<qsizetype>(level, words.size() - 1));
             shown.label = (configured->label.isEmpty() ? word : configured->label + QLatin1Char(' ') + word).left(MaxLabelLength);
         }
-        image = m_tiles.render(shown, MediaController::stateName(m_media->state()), m_pressed.at(index), iconFile, tint,
+        QString iconState = MediaController::stateName(m_media->state());
+        const BuiltinActions::Spec *builtin = configured->action.type == ActionType::Builtin ? BuiltinActions::find(configured->action.builtin) : nullptr;
+        if (configured->action.type == ActionType::Toggle || (builtin && builtin->stateful)) {
+            const bool on = m_toggles.value(toggleId(key), false);
+            iconState = on ? QStringLiteral("on") : QStringLiteral("off");
+            active = on;
+        }
+        image = m_tiles.render(shown, iconState, m_pressed.at(index), iconFile, tint,
                                key == m_highlightKey, active);
         if (recordingDisabled) {
             QPainter painter(&image);
@@ -593,6 +608,39 @@ void PagesController::perform(const Action &action, int times)
             }
         }
         return;
+    case ActionType::Url:
+        if (m_appsAllowed && !m_opener(QUrl(action.url)))
+            qWarning() << "galleon-customizerd: could not open" << action.url;
+        return;
+    case ActionType::File: {
+        if (!m_appsAllowed)
+            return;
+        const QString file = action.url.startsWith(QLatin1String("~/")) ? QDir::homePath() + action.url.mid(1) : action.url;
+        if (!m_opener(QUrl::fromLocalFile(file)))
+            qWarning() << "galleon-customizerd: could not open" << file;
+        return;
+    }
+    case ActionType::Command:
+        if (m_appsAllowed && !m_commandRunner(action.shell, action.terminal))
+            qWarning() << "galleon-customizerd: could not run the command of a key";
+        return;
+    case ActionType::Multi:
+        runSteps(action.steps, action.delays, 0, m_generation);
+        return;
+    case ActionType::Toggle:
+        flipToggle(m_toggleContext.isEmpty() ? QStringLiteral("dial") : m_toggleContext, action);
+        return;
+    case ActionType::Builtin: {
+        if (!m_appsAllowed)
+            return;
+        const QString id = m_toggleContext.isEmpty() ? QStringLiteral("dial") : m_toggleContext;
+        const quint64 generation = m_generation;
+        m_builtins->run(action.builtin, action.options, times, [this, id, generation](const BuiltinResult &result) {
+            if (generation == m_generation)
+                onBuiltinDone(id, result);
+        });
+        return;
+    }
     case ActionType::Theme:
         if (m_pressedDial >= 0)
             setThemeMode(m_pressedDial); // a dial: choose the theme by turning it
@@ -914,7 +962,22 @@ void PagesController::onKeyPressed(int key)
         m_recording->trigger(key);
         return;
     }
-    perform(action); // may change the page: the pressed flags are reset there
+    if (configured->longPress) {
+        // Held for LongPressMs: the long action. Released before: the usual one, on release.
+        const auto index = static_cast<std::size_t>(key);
+        const quint64 generation = ++m_longPressGen.at(index);
+        m_longPressFired.at(index) = false;
+        const QString page = currentPage();
+        const Action held = *configured->longPress;
+        QTimer::singleShot(LongPressMs, this, [this, key, index, generation, page, held] {
+            if (!m_pressed.at(index) || m_longPressGen.at(index) != generation || currentPage() != page)
+                return;
+            m_longPressFired.at(index) = true;
+            performKey(key, held);
+        });
+        return;
+    }
+    performKey(key, action); // may change the page: the pressed flags are reset there
 }
 
 void PagesController::onKeyReleased(int key)
@@ -924,12 +987,205 @@ void PagesController::onKeyReleased(int key)
     if (key < 0 || key >= galleon::protocol::KeyCount || !m_pressed.at(static_cast<std::size_t>(key)))
         return;
     m_pressed.at(static_cast<std::size_t>(key)) = false;
+    if (const KeyConfig *configured = keyConfig(key); configured && configured->longPress
+        && !(m_recording && currentPage() == m_recordingPage)) {
+        const auto index = static_cast<std::size_t>(key);
+        ++m_longPressGen.at(index); // the long press timer, if any, does nothing now
+        const bool fired = std::exchange(m_longPressFired.at(index), false);
+        if (!fired) {
+            const Action action = configured->action;
+            drawKey(key, false);
+            if (action.type == ActionType::Key) {
+                if (m_injector) {
+                    if (const auto code = keyCodeForName(action.keyName)) {
+                        m_injector->key(*code, true);
+                        m_injector->key(*code, false);
+                    }
+                }
+                return;
+            }
+            performKey(key, action);
+            return;
+        }
+    }
     if (int &held = m_heldKey.at(static_cast<std::size_t>(key)); held != 0) {
         if (m_injector)
             m_injector->key(held, false);
         held = 0;
     }
     drawKey(key, false);
+}
+
+QString PagesController::toggleId(int key) const
+{
+    return currentPage() + QLatin1Char('/') + QString::number(key);
+}
+
+bool PagesController::toggleOn(int key) const
+{
+    return m_toggles.value(toggleId(key), false);
+}
+
+void PagesController::performKey(int key, const Action &action)
+{
+    m_toggleContext = toggleId(key);
+    perform(action);
+    m_toggleContext.clear();
+}
+
+void PagesController::runSteps(const std::vector<Action> &steps, const std::vector<int> &delays, std::size_t from, quint64 generation)
+{
+    for (std::size_t i = from; i < steps.size(); ++i) {
+        if (generation != m_generation || m_suspended)
+            return; // a new pages file, or the module asleep: the rest is dropped
+        const int delay = i < delays.size() ? delays.at(i) : 0;
+        if (delay > 0) {
+            QTimer::singleShot(delay, this, [this, steps, delays, i, generation] {
+                if (generation != m_generation || m_suspended)
+                    return;
+                perform(steps.at(i));
+                runSteps(steps, delays, i + 1, generation);
+            });
+            return;
+        }
+        perform(steps.at(i));
+    }
+}
+
+void PagesController::flipToggle(const QString &id, const Action &toggle)
+{
+    if (toggle.steps.size() != 2)
+        return;
+    const bool on = m_toggles.value(id, false);
+    perform(on ? toggle.steps.at(1) : toggle.steps.at(0));
+    m_toggles.insert(id, !on);
+    redraw();
+    if (!toggle.shell.isEmpty() && m_appsAllowed) {
+        // The real state, once the action had time to act.
+        const QString command = toggle.shell;
+        QTimer::singleShot(400, this, [this, id, command] { readToggleStatus(id, command); });
+    }
+}
+
+void PagesController::readToggleStatus(const QString &id, const QString &command)
+{
+    if (!m_statusReader)
+        return;
+    const quint64 generation = m_generation;
+    m_statusReader(command, [this, id, generation](int status) {
+        if (generation != m_generation || status < 0)
+            return;
+        const bool on = status == 1;
+        if (m_toggles.value(id, false) == on && m_toggles.contains(id))
+            return;
+        m_toggles.insert(id, on);
+        redraw();
+    });
+}
+
+void PagesController::pollToggles()
+{
+    if (m_suspended || !m_appsAllowed)
+        return;
+    for (int key = 0; key < galleon::protocol::KeyCount; ++key) {
+        const KeyConfig *configured = keyConfig(key);
+        if (configured && configured->action.type == ActionType::Toggle && !configured->action.shell.isEmpty())
+            readToggleStatus(toggleId(key), configured->action.shell);
+        const BuiltinActions::Spec *builtin = configured && configured->action.type == ActionType::Builtin
+            ? BuiltinActions::find(configured->action.builtin) : nullptr;
+        if (builtin && builtin->stateful) {
+            const QString id = toggleId(key);
+            const quint64 generation = m_generation;
+            m_builtins->readState(builtin->name, [this, id, generation](std::optional<bool> on) {
+                if (generation != m_generation || !on || (m_toggles.contains(id) && m_toggles.value(id) == *on))
+                    return;
+                m_toggles.insert(id, *on);
+                redraw();
+            });
+        }
+    }
+}
+
+void PagesController::onBuiltinDone(const QString &id, const BuiltinResult &result)
+{
+    if (!result.ok)
+        qWarning() << "galleon-customizerd: a key's action failed:" << result.message;
+    if (!result.message.isEmpty())
+        Q_EMIT actionMessage(result.message, result.ok);
+    if (result.state && m_toggles.value(id, !*result.state) != *result.state) {
+        m_toggles.insert(id, *result.state);
+        redraw();
+    }
+    if (!result.open.isEmpty() && !m_opener(result.open))
+        qWarning() << "galleon-customizerd: could not open" << result.open.toString();
+    if (!result.notifyTitle.isEmpty())
+        m_builtins->notify(result.notifyTitle, result.notifyBody);
+    if (result.paste) {
+        const quint64 generation = m_generation;
+        QTimer::singleShot(50, this, [this, generation] {
+            if (generation != m_generation)
+                return;
+            Action paste;
+            paste.type = ActionType::Combo;
+            paste.keys = QStringLiteral("ctrl+v");
+            perform(paste);
+        });
+    }
+}
+
+bool PagesController::runCommandLine(const QString &command, bool terminal)
+{
+#ifdef Q_OS_WIN
+    Q_UNUSED(terminal)
+    return QProcess::startDetached(QStringLiteral("cmd.exe"), {QStringLiteral("/c"), command});
+#else
+    if (!terminal)
+        return QProcess::startDetached(QStringLiteral("/bin/sh"), {QStringLiteral("-c"), command});
+    // The first terminal found; the window stays open until Enter is pressed.
+    const QString held = command + QStringLiteral("; printf '\\n[Enter] '; read -r _");
+    const QList<QStringList> terminals{
+        {QStringLiteral("xdg-terminal-exec"), QStringLiteral("/bin/sh"), QStringLiteral("-c"), held},
+        {QStringLiteral("ptyxis"), QStringLiteral("--new-window"), QStringLiteral("-x"), QStringLiteral("/bin/sh -c ") + shellQuote(held)},
+        {QStringLiteral("kgx"), QStringLiteral("--"), QStringLiteral("/bin/sh"), QStringLiteral("-c"), held},
+        {QStringLiteral("gnome-terminal"), QStringLiteral("--"), QStringLiteral("/bin/sh"), QStringLiteral("-c"), held},
+        {QStringLiteral("konsole"), QStringLiteral("-e"), QStringLiteral("/bin/sh"), QStringLiteral("-c"), held},
+        {QStringLiteral("x-terminal-emulator"), QStringLiteral("-e"), QStringLiteral("/bin/sh"), QStringLiteral("-c"), held},
+        {QStringLiteral("xterm"), QStringLiteral("-e"), QStringLiteral("/bin/sh"), QStringLiteral("-c"), held},
+    };
+    for (const QStringList &argv : terminals) {
+        if (!QStandardPaths::findExecutable(argv.first()).isEmpty())
+            return QProcess::startDetached(argv.first(), argv.mid(1));
+    }
+    return false;
+#endif
+}
+
+QString PagesController::shellQuote(const QString &text)
+{
+    QString quoted = text;
+    quoted.replace(QLatin1Char('\''), QLatin1String("'\\''"));
+    return QLatin1Char('\'') + quoted + QLatin1Char('\'');
+}
+
+void PagesController::readStatusCommand(const QString &command, std::function<void(int)> done)
+{
+    auto *process = new QProcess;
+    QObject::connect(process, &QProcess::finished, process, [process, done](int code, QProcess::ExitStatus status) {
+        done(status == QProcess::NormalExit ? (code == 0 ? 1 : 0) : -1);
+        process->deleteLater();
+    });
+    QObject::connect(process, &QProcess::errorOccurred, process, [process, done](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart) {
+            done(-1);
+            process->deleteLater();
+        }
+    });
+    QTimer::singleShot(5000, process, [process] { process->kill(); }); // a hung command counts as unknown
+#ifdef Q_OS_WIN
+    process->start(QStringLiteral("cmd.exe"), {QStringLiteral("/c"), command});
+#else
+    process->start(QStringLiteral("/bin/sh"), {QStringLiteral("-c"), command});
+#endif
 }
 
 void PagesController::onDialRotated(int dial, int steps)

@@ -29,14 +29,14 @@ set_target_properties(bosun_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 qt_add_resources(bosun_core "bosun_ui"
     PREFIX "/bosun"
-    FILES qml/TabWidths.js qml/FpsSetupDialog.qml qml/UpdatePanel.qml qml/GamingPage.qml qml/GameModePage.qml qml/WidgetsPage.qml qml/Bosun.qml qml/Pill.qml qml/Stepper.qml qml/Field.qml qml/Swatches.qml qml/KeyEditor.qml qml/TabEditor.qml qml/NewTab.qml qml/ScreensaversPage.qml qml/CropEditor.qml qml/WallpapersPage.qml
+    FILES qml/TabWidths.js qml/FpsSetupDialog.qml qml/UpdatePanel.qml qml/GamingPage.qml qml/GameModePage.qml qml/WidgetsPage.qml qml/Bosun.qml qml/Pill.qml qml/Stepper.qml qml/Field.qml qml/Swatches.qml qml/KeyEditor.qml qml/TabEditor.qml qml/NewTab.qml qml/ScreensaversPage.qml qml/CropEditor.qml qml/WallpapersPage.qml qml/Profiles.qml
           icons/galleon-customizer.svg
 )
 
 qt_add_resources(bosun_core "bosun_languages"
     PREFIX "/bosun/translations"
     BASE "translations"
-    FILES translations/en.json translations/fr.json translations/de.json translations/es.json
+    FILES translations/en.json translations/fr.json translations/de.json translations/es.json translations/vi.json
 )
 
 # The icon in the notification area needs QSystemTrayIcon (Qt Widgets): only the program has it, not the library the tests use.

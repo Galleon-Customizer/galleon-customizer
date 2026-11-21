@@ -25,8 +25,15 @@ Column {
         {id: "media", label: qsTr("Music player")},
         {id: "page", label: qsTr("Open a page")},
         {id: "back", label: qsTr("Back")},
-        {id: "key", label: qsTr("Keypad key")}
+        {id: "key", label: qsTr("Keypad key")},
+        {id: "combo", label: qsTr("Shortcut")},
+        {id: "text", label: qsTr("Type text")},
+        {id: "url", label: qsTr("Web address")},
+        {id: "file", label: qsTr("File or folder")},
+        {id: "command", label: qsTr("Command")},
+        {id: "builtin", label: qsTr("Ready-made")}
     ]
+    readonly property var builtinSpec: backend.builtinActions.find(b => b.id === spec.builtin) || null
     readonly property bool complete: {
         switch (spec.type) {
         case "app": return spec.desktop !== ""
@@ -35,6 +42,13 @@ Column {
         case "back": return true
         case "key": return spec.keyName !== ""
         case "steam": return true
+        case "keep": return true
+        case "combo": return (spec.keys || "").trim() !== ""
+        case "text": return (spec.text || "") !== ""
+        case "url": return (spec.url || "").trim() !== ""
+        case "file": return (spec.url || "").trim() !== ""
+        case "command": return (spec.shell || "").trim() !== ""
+        case "builtin": return (spec.builtin || "") !== ""
         default: return false
         }
     }
@@ -53,8 +67,19 @@ Column {
 
     function load() {
         const k = key
+        const builtin = /^(system|sound|clipboard|capture)\./.test(k.type || "")
+        const kept = k.type === "multi" || k.type === "toggle"
         spec = {
-            type: k.empty || k.type === "none" ? "" : k.type,
+            type: k.empty || k.type === "none" ? "" : (builtin ? "builtin" : (kept ? "keep" : k.type)),
+            keptKind: kept ? k.type : "",
+            builtin: builtin ? k.type : "",
+            options: k.options || ({}),
+            keys: k.keys || "",
+            text: k.text || "",
+            enter: k.enter || false,
+            url: k.url || "",
+            shell: k.shell || "",
+            terminal: k.terminal || false,
             desktop: k.desktop || "",
             command: k.command || "",
             step: k.step || 5,
@@ -82,6 +107,22 @@ Column {
         if (id === "media" && copy.command === "")
             copy.command = "play-pause"
         spec = copy
+    }
+
+    function builtinPicked(id) {
+        const copy = Object.assign({}, spec)
+        copy.builtin = id
+        copy.options = ({})
+        spec = copy
+    }
+
+    function setOption(name, value) {
+        const options = Object.assign({}, spec.options)
+        if (value === undefined || value === "")
+            delete options[name]
+        else
+            options[name] = value
+        change("options", options)
     }
 
     // Backend refreshes also rebuild identical key objects. Keep the draft until
@@ -119,6 +160,121 @@ Column {
             visible: editor.spec.type === "steam"
             text: qsTr("Steam game")
             selected: true
+        }
+        Pill {
+            visible: editor.spec.type === "keep"
+            text: editor.spec.keptKind === "toggle" ? qsTr("On / off") : qsTr("Several actions")
+            selected: true
+            onClicked: editor.kindPicked("keep")
+        }
+    }
+
+    // A shortcut, a text to type, an address, a file, a command line.
+    Column {
+        visible: ["combo", "text", "url", "file", "command"].indexOf(editor.spec.type) >= 0
+        width: parent.width
+        spacing: 6
+        Field {
+            width: Math.min(parent.width, 420)
+            maximumLength: editor.spec.type === "command" ? 1000 : (editor.spec.type === "text" ? 200 : 2000)
+            placeholder: editor.spec.type === "combo" ? qsTr("Keys such as ctrl+shift+s")
+                       : editor.spec.type === "text" ? qsTr("Text")
+                       : editor.spec.type === "url" ? "https://…"
+                       : editor.spec.type === "file" ? qsTr("Absolute path, or ~/…")
+                       : qsTr("Command line")
+            value: editor.spec.type === "combo" ? editor.spec.keys
+                 : editor.spec.type === "text" ? editor.spec.text
+                 : editor.spec.type === "command" ? editor.spec.shell : editor.spec.url
+            input.onTextEdited: editor.change(editor.spec.type === "combo" ? "keys"
+                                            : editor.spec.type === "text" ? "text"
+                                            : editor.spec.type === "command" ? "shell" : "url", input.text)
+        }
+        Pill {
+            visible: editor.spec.type === "text"
+            text: qsTr("Then press Enter")
+            selected: editor.spec.enter
+            onClicked: editor.change("enter", !editor.spec.enter)
+        }
+        Pill {
+            visible: editor.spec.type === "command"
+            text: qsTr("In a terminal")
+            selected: editor.spec.terminal
+            onClicked: editor.change("terminal", !editor.spec.terminal)
+        }
+    }
+
+    // A ready-made action, then its options.
+    Column {
+        visible: editor.spec.type === "builtin"
+        width: parent.width
+        spacing: 6
+        Repeater {
+            model: ["system", "sound", "clipboard", "capture"]
+            delegate: Flow {
+                id: group
+                required property string modelData
+                readonly property var actions: editor.backend.builtinActions.filter(b => b.id.indexOf(modelData + ".") === 0)
+                width: editor.width
+                spacing: 6
+                Text {
+                    width: 110
+                    height: 30
+                    verticalAlignment: Text.AlignVCenter
+                    color: "#9aa0a6"
+                    font.pixelSize: 13
+                    text: group.actions.length > 0 ? group.actions[0].group : ""
+                }
+                Repeater {
+                    model: group.actions
+                    delegate: Pill {
+                        required property var modelData
+                        text: modelData.label
+                        selected: editor.spec.builtin === modelData.id
+                        onClicked: editor.builtinPicked(modelData.id)
+                    }
+                }
+            }
+        }
+        Repeater {
+            model: editor.builtinSpec ? editor.builtinSpec.options : []
+            delegate: Flow {
+                id: option
+                required property var modelData
+                width: editor.width
+                spacing: 6
+                Text {
+                    width: 110
+                    height: 30
+                    verticalAlignment: Text.AlignVCenter
+                    color: "#9aa0a6"
+                    font.pixelSize: 13
+                    text: option.modelData.key
+                }
+                Repeater {
+                    model: option.modelData.kind === "choice" ? option.modelData.choices : []
+                    delegate: Pill {
+                        required property string modelData
+                        text: modelData
+                        selected: (editor.spec.options[option.modelData.key] || option.modelData.choices[0]) === modelData
+                        onClicked: editor.setOption(option.modelData.key, modelData)
+                    }
+                }
+                Pill {
+                    visible: option.modelData.kind === "bool"
+                    text: editor.spec.options[option.modelData.key] === false ? qsTr("Off") : qsTr("On")
+                    selected: editor.spec.options[option.modelData.key] !== false
+                    onClicked: editor.setOption(option.modelData.key, editor.spec.options[option.modelData.key] === false)
+                }
+                Field {
+                    visible: option.modelData.kind === "int" || option.modelData.kind === "string"
+                    width: option.modelData.kind === "int" ? 90 : 300
+                    maximumLength: option.modelData.kind === "int" ? 5 : option.modelData.max
+                    placeholder: option.modelData.kind === "int" ? option.modelData.min + "…" + option.modelData.max : ""
+                    value: editor.spec.options[option.modelData.key] !== undefined ? String(editor.spec.options[option.modelData.key]) : ""
+                    input.onTextEdited: editor.setOption(option.modelData.key,
+                        option.modelData.kind === "int" ? (input.text === "" || isNaN(parseInt(input.text)) ? undefined : parseInt(input.text)) : input.text)
+                }
+            }
         }
     }
 
@@ -299,6 +455,14 @@ Column {
         color: "#9aa0a6"
         font.pixelSize: 13
         text: qsTr("Starts the Steam game number %1. It is kept as it is; give the key another action to replace it.").arg(editor.spec.appid)
+    }
+    Text {
+        visible: editor.spec.type === "keep"
+        width: parent.width
+        wrapMode: Text.Wrap
+        color: "#9aa0a6"
+        font.pixelSize: 13
+        text: qsTr("This key does several actions, or switches on and off. It is kept as it is; its text and icon can still be changed.")
     }
 
     // ---- what it shows

@@ -4,6 +4,7 @@
 #include <InitialPages.h>
 
 #include "PagesEditor.h"
+#include "BuiltinActions.h"
 
 #include "DesktopEntries.h"
 #include "PagesConfig.h"
@@ -112,6 +113,23 @@ QJsonObject actionOf(const KeySpec &spec)
         action.insert(QStringLiteral("key"), spec.keyName);
     } else if (spec.type == QLatin1String("steam")) {
         action.insert(QStringLiteral("appid"), spec.appid);
+    } else if (spec.type == QLatin1String("combo")) {
+        action.insert(QStringLiteral("keys"), spec.keys.trimmed());
+    } else if (spec.type == QLatin1String("text")) {
+        action.insert(QStringLiteral("text"), spec.text);
+        if (spec.enter)
+            action.insert(QStringLiteral("enter"), true);
+    } else if (spec.type == QLatin1String("url")) {
+        action.insert(QStringLiteral("url"), spec.url.trimmed());
+    } else if (spec.type == QLatin1String("file")) {
+        action.insert(QStringLiteral("path"), spec.url.trimmed());
+    } else if (spec.type == QLatin1String("command")) {
+        action.insert(QStringLiteral("command"), spec.shell);
+        if (spec.terminal)
+            action.insert(QStringLiteral("terminal"), true);
+    } else if (BuiltinActions::find(spec.type)) {
+        for (auto it = spec.options.begin(); it != spec.options.end(); ++it)
+            action.insert(it.key(), it.value());
     }
     return action;
 }
@@ -504,8 +522,9 @@ EditResult PagesEditor::assignApp(const QString &file, const QString &page, int 
 EditResult PagesEditor::setKey(const QString &file, const QString &page, int key, const KeySpec &spec)
 {
     static const QStringList types{QStringLiteral("app"), QStringLiteral("media"), QStringLiteral("page"), QStringLiteral("back"),
-                                   QStringLiteral("key"), QStringLiteral("steam")};
-    if (!types.contains(spec.type))
+                                   QStringLiteral("key"), QStringLiteral("steam"), QStringLiteral("combo"), QStringLiteral("text"),
+                                   QStringLiteral("url"), QStringLiteral("file"), QStringLiteral("command"), QStringLiteral("keep")};
+    if (!types.contains(spec.type) && !BuiltinActions::find(spec.type))
         return failure(QCoreApplication::translate("PagesEditor", "a key does one of: %1").arg(types.join(QStringLiteral(", "))));
     if (spec.type == QLatin1String("app")) {
         if (!DesktopEntries::isValidReference(spec.desktop))
@@ -521,14 +540,24 @@ EditResult PagesEditor::setKey(const QString &file, const QString &page, int key
     QJsonArray keys;
     // Remember the words of the old key before it goes.
     QJsonValue words;
+    QJsonObject old;
     const QJsonArray before = root.value(QStringLiteral("pages")).toObject().value(page).toObject().value(QStringLiteral("keys")).toArray();
     for (const auto &entry : before) {
-        if (entry.toObject().value(QStringLiteral("key")).toInt(-1) == key)
-            words = entry.toObject().value(QStringLiteral("state_labels"));
+        if (entry.toObject().value(QStringLiteral("key")).toInt(-1) == key) {
+            old = entry.toObject();
+            words = old.value(QStringLiteral("state_labels"));
+        }
     }
+    if (spec.type == QLatin1String("keep") && !old.contains(QStringLiteral("action")))
+        return failure(QCoreApplication::translate("PagesEditor", "this key has no action to keep"));
     if (!pageKeys(root, page, key, keys, error))
         return error;
-    QJsonObject entry{{QStringLiteral("key"), key}, {QStringLiteral("action"), actionOf(spec)}};
+    QJsonObject entry{{QStringLiteral("key"), key},
+                      {QStringLiteral("action"), spec.type == QLatin1String("keep") ? old.value(QStringLiteral("action")) : QJsonValue(actionOf(spec))}};
+    for (const QString &kept : {QStringLiteral("long_press"), QStringLiteral("look")}) {
+        if (old.contains(kept))
+            entry.insert(kept, old.value(kept));
+    }
     if (!spec.label.trimmed().isEmpty())
         entry.insert(QStringLiteral("label"), spec.label.trimmed());
     putIcon(entry, spec.icon);
@@ -538,6 +567,18 @@ EditResult PagesEditor::setKey(const QString &file, const QString &page, int key
     keys.append(entry);
     storeKeys(root, page, keys);
     return write(file, root, original);
+}
+
+EditResult PagesEditor::replaceAll(const QString &file, const QByteArray &json)
+{
+    const QByteArray bytes = preparePagesJson(json);
+    const PagesParseResult parsed = parsePagesConfig(bytes);
+    if (!parsed.config) {
+        EditResult error{.ok = false, .errors = parsed.errors};
+        error.errors.prepend(QStringLiteral("the profile has errors and was not used:"));
+        return error;
+    }
+    return write(file, QJsonDocument::fromJson(bytes).object(), QFileInfo::exists(file));
 }
 
 EditResult PagesEditor::clearKey(const QString &file, const QString &page, int key)
